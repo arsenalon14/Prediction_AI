@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TAA AI-Powered Perishable Demand Forecasting Dashboard for DMK-MLE route optimization">
+    <title>TAA Perishable Demand Forecaster — AI Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ===== DESIGN SYSTEM TOKENS ===== */
+        :root {
+            --bg-primary: #0f172a;
+            --bg-panel: rgba(30, 41, 59, 0.7);
+            --accent-cobalt: #3b82f6;
+            --accent-indigo: #6366f1;
+            --accent-lavender: #a78bfa;
+            --accent-emerald: #10b981;
+            --accent-crimson: #ef4444;
+            --accent-amber: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-ghost: rgba(255, 255, 255, 0.1);
+            --border-active: rgba(255, 255, 255, 0.2);
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --radius-panel: 16px;
+            --radius-btn: 10px;
+            --shadow-glow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            --shadow-panel: 0 10px 30px rgba(0, 0, 0, 0.2);
+            --transition-micro: 0.3s ease;
+        }
+
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-primary);
+            background-image:
+                radial-gradient(circle at 10% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== SKIP LINK (Accessibility) ===== */
+        .skip-link {
+            position: absolute; top: -40px; left: 0;
+            background: var(--accent-cobalt); color: white;
+            padding: 0.5rem 1rem; z-index: 1000;
+            transition: top var(--transition-micro);
+        }
+        .skip-link:focus { top: 0; }
+
+        /* ===== APP LAYOUT ===== */
+        .app-container { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            background: var(--bg-panel);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid var(--border-ghost);
+            padding: 2rem 1.5rem;
+            display: flex; flex-direction: column;
+            position: sticky; top: 0; height: 100vh; overflow-y: auto;
+        }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin-bottom: 2rem; padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-ghost);
+        }
+        .brand-logo {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--accent-cobalt) 0%, var(--accent-indigo) 100%);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.1rem; font-family: var(--font-display);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3); flex-shrink: 0;
+        }
+        .brand-text h1 {
+            font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
+            text-wrap: balance;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .brand-text span {
+            font-size: 0.7rem; color: var(--accent-cobalt); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+
+        /* ===== MENU LIST ===== */
+        .section-label {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--text-muted);
+            margin-bottom: 1rem; margin-top: 0.5rem;
+        }
+        .menu-list { flex: 1; display: flex; flex-direction: column; gap: 0; }
+        .menu-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.85rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            transition: background var(--transition-micro);
+        }
+        .menu-item:hover { background: rgba(255, 255, 255, 0.03); }
+        .menu-info { flex: 1; min-width: 0; }
+        .menu-name {
+            font-weight: 500; font-size: 0.9rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .menu-meta {
+            font-size: 0.72rem; color: var(--text-muted);
+            margin-top: 0.15rem; font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== TOGGLE SWITCH ===== */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; margin-left: 0.75rem; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1); border-radius: 34px;
+            transition: background-color var(--transition-micro);
+        }
+        .switch-slider::before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; border-radius: 50%;
+            transition: transform var(--transition-micro);
+        }
+        .switch input:checked + .switch-slider { background-color: var(--accent-emerald); }
+        .switch input:checked + .switch-slider::before { transform: translateX(20px); }
+        .switch input:focus-visible + .switch-slider { outline: 2px solid var(--accent-cobalt); outline-offset: 2px; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            width: 100%; padding: 0.75rem 1rem; border: none;
+            border-radius: var(--radius-btn); font-family: var(--font-body);
+            font-weight: 600; font-size: 0.9rem; cursor: pointer; text-align: center;
+            transition: transform var(--transition-micro), box-shadow var(--transition-micro), background var(--transition-micro);
+        }
+        .btn:focus-visible { outline: 2px solid var(--accent-cobalt); outline-offset: 2px; }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cobalt), var(--accent-indigo));
+            color: white; font-size: 1rem; box-shadow: var(--shadow-glow);
+        }
+        .btn-primary:hover { box-shadow: 0 6px 25px rgba(59, 130, 246, 0.55); transform: scale(1.02); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05); color: var(--text-primary);
+            border: 1px solid var(--border-ghost);
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+        .btn-sm { width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+        /* ===== SIDEBAR FOOTER ===== */
+        .sidebar-footer {
+            margin-top: auto; padding-top: 1.5rem;
+            border-top: 1px solid var(--border-ghost); text-align: center;
+        }
+        .sidebar-footer p { font-size: 0.72rem; color: var(--text-muted); }
+        .active-count {
+            font-family: var(--font-display); font-size: 1.8rem; font-weight: 700;
+            background: linear-gradient(to right, var(--accent-cobalt), var(--accent-lavender));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        main { padding: 2rem 2.5rem; max-width: 1200px; }
+        .main-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem; padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-ghost);
+        }
+        .main-header h2 {
+            font-family: var(--font-display); font-size: 1.75rem; font-weight: 700;
+            text-wrap: balance;
+            background: linear-gradient(to right, #60a5fa, var(--accent-lavender));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .main-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+        .status-pill {
+            background: var(--bg-panel); backdrop-filter: blur(12px);
+            border: 1px solid var(--border-ghost); padding: 0.5rem 1rem;
+            border-radius: 50px; font-size: 0.8rem; font-weight: 500;
+            display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
+
+        /* ===== TAB NAVIGATION ===== */
+        .tab-nav {
+            display: flex; gap: 0.25rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-ghost);
+        }
+        .tab-btn {
+            padding: 0.55rem 1.2rem;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid transparent;
+            border-bottom: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: var(--font-body); font-size: 0.85rem; font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-micro);
+            position: relative; bottom: -1px;
+        }
+        .tab-btn:hover:not(.active) { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+        .tab-btn.active {
+            background: #0f172a;
+            border-color: var(--border-ghost);
+            border-bottom-color: #0f172a;
+            color: var(--accent-cobalt); font-weight: 600;
+        }
+        .tab-btn:focus-visible { outline: 2px solid var(--accent-cobalt); outline-offset: 2px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== PANELS ===== */
+        .panel {
+            background: var(--bg-panel); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-ghost); border-radius: var(--radius-panel);
+            padding: 1.75rem; box-shadow: var(--shadow-panel);
+            transition: transform var(--transition-micro), box-shadow var(--transition-micro);
+            margin-bottom: 1.5rem;
+        }
+        .panel:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); }
+        .panel-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .panel-subtitle { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        /* ===== KPI ROW ===== */
+        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .kpi-card {
+            background: var(--bg-panel); backdrop-filter: blur(16px);
+            border: 1px solid var(--border-ghost); border-radius: var(--radius-panel);
+            padding: 1.25rem; position: relative; overflow: hidden;
+            transition: transform var(--transition-micro), border-color var(--transition-micro);
+        }
+        .kpi-card:hover { transform: translateY(-3px); border-color: var(--border-active); }
+        .kpi-card::before {
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 3px; height: 100%;
+            background: linear-gradient(to bottom, var(--accent-cobalt), var(--accent-indigo));
+        }
+        .kpi-card.emerald::before { background: linear-gradient(to bottom, var(--accent-emerald), var(--accent-cobalt)); }
+        .kpi-card.amber::before { background: linear-gradient(to bottom, var(--accent-amber), var(--accent-crimson)); }
+        .kpi-card.lavender::before { background: linear-gradient(to bottom, var(--accent-lavender), var(--accent-indigo)); }
+        .kpi-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .kpi-value {
+            font-family: var(--font-display); font-size: 1.6rem; font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(to right, #fff, #e2e8f0);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* ===== UPLOAD ZONE ===== */
+        .upload-zone {
+            border: 2px dashed var(--accent-cobalt); border-radius: 12px;
+            padding: 2rem 1.5rem; text-align: center;
+            background: rgba(59, 130, 246, 0.04);
+            cursor: pointer;
+            transition: background var(--transition-micro), border-color var(--transition-micro);
+            margin-bottom: 1rem; position: relative;
+        }
+        .upload-zone:hover, .upload-zone.drag-over { background: rgba(59, 130, 246, 0.1); border-color: #60a5fa; }
+        .upload-zone.has-files { border-color: var(--accent-emerald); background: rgba(16, 185, 129, 0.06); }
+        .upload-icon { font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.85; }
+        .upload-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.4rem; }
+        .upload-hint { color: var(--text-muted); font-size: 0.82rem; }
+        .upload-highlight { color: var(--accent-cobalt); font-weight: 600; }
+        .file-chips { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap; }
+        .file-chip {
+            background: rgba(16, 185, 129, 0.15); color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 0.25rem 0.75rem; border-radius: 50px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+
+        /* ===== UPLOAD META (flight date badge + alerts) ===== */
+        .upload-meta {
+            display: flex; flex-wrap: wrap; gap: 0.5rem;
+            align-items: center; margin-bottom: 1rem;
+        }
+        .flight-date-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.3rem 0.9rem;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+            color: var(--accent-cobalt); font-variant-numeric: tabular-nums;
+        }
+        .pax-stat {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.3rem 0.85rem;
+            background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+            color: #34d399; font-variant-numeric: tabular-nums;
+        }
+        .pbm-stat {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.3rem 0.85rem;
+            background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+            color: var(--accent-amber); font-variant-numeric: tabular-nums;
+        }
+        .upload-alert {
+            width: 100%; padding: 0.6rem 0.9rem; border-radius: 8px;
+            font-size: 0.8rem; font-weight: 500;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .upload-alert.warn {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--accent-amber);
+        }
+
+        /* ===== RESULTS TABLE ===== */
+        .table-wrap { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            padding: 0.9rem 1rem; text-align: left;
+            border-bottom: 1px solid var(--border-ghost);
+            color: var(--text-muted); font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+        }
+        td {
+            padding: 0.9rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.88rem; font-variant-numeric: tabular-nums; white-space: nowrap;
+        }
+        tr:hover td { background: rgba(255, 255, 255, 0.015); }
+        .q-value { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; }
+        .badge-up {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            padding: 0.2rem 0.6rem; border-radius: 50px;
+            font-size: 0.72rem; font-weight: 600;
+            background: rgba(16, 185, 129, 0.15); color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .badge-down {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            padding: 0.2rem 0.6rem; border-radius: 50px;
+            font-size: 0.72rem; font-weight: 600;
+            background: rgba(239, 68, 68, 0.15); color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .badge-neutral {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            padding: 0.2rem 0.6rem; border-radius: 50px;
+            font-size: 0.72rem; font-weight: 600;
+            background: rgba(148, 163, 184, 0.15); color: var(--text-muted);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        /* ===== Q* MANUAL OVERRIDE INPUT ===== */
+        .q-override {
+            width: 66px; padding: 0.25rem 0.4rem;
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border-ghost);
+            border-radius: 6px; color: var(--text-primary);
+            font-family: var(--font-display); font-size: 1rem; font-weight: 700; text-align: center;
+            transition: border-color var(--transition-micro), background var(--transition-micro);
+        }
+        .q-override:hover { border-color: var(--border-active); }
+        .q-override:focus { outline: none; border-color: var(--accent-cobalt); background: rgba(59,130,246,0.08); }
+
+        /* ===== NATIONALITY PILLS ===== */
+        .nat-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.8rem; align-items: center; }
+        .nat-pill {
+            padding: 0.2rem 0.65rem; border-radius: 20px;
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border-ghost);
+            font-size: 0.76rem; font-weight: 500; color: var(--text-primary);
+        }
+        .nat-pct { font-weight: 700; color: var(--accent-cobalt); margin-left: 0.3rem; }
+
+        .theory-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+        .theory-tag {
+            font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+            padding: 0.15rem 0.45rem; border-radius: 4px;
+            background: rgba(99, 102, 241, 0.15); color: var(--accent-lavender);
+        }
+        .theory-tag.cold { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+            z-index: 500; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1e293b; border: 1px solid var(--border-ghost);
+            border-radius: 20px; padding: 2rem; width: 440px; max-width: 90vw;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+        .modal h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted); margin-bottom: 0.4rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%; padding: 0.7rem 0.9rem;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-ghost);
+            border-radius: 8px; color: var(--text-primary);
+            font-family: var(--font-body); font-size: 0.9rem;
+            transition: border-color var(--transition-micro);
+        }
+        .form-input:focus { outline: none; border-color: var(--accent-cobalt); }
+        .form-input::placeholder { color: rgba(148, 163, 184, 0.5); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+        .modal-actions .btn { flex: 1; }
+
+        /* ===== LOADING SPINNER ===== */
+        .spinner {
+            display: inline-block; width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+            border-radius: 50%; animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== POST-FLIGHT ACTUALS TAB ===== */
+        .actuals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+        .actuals-upload-label {
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.6rem;
+        }
+        .actuals-chip { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.6rem; flex-wrap: wrap; }
+        .actuals-result {
+            margin-top: 1.5rem; padding: 1.25rem;
+            background: rgba(16, 185, 129, 0.07); border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 12px;
+        }
+        .actuals-result-title { font-weight: 600; color: #34d399; margin-bottom: 0.75rem; font-size: 0.9rem; }
+        .bayesian-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .bayesian-table th { font-size: 0.7rem; letter-spacing: 0.5px; }
+        .bayesian-table td { font-size: 0.82rem; padding: 0.6rem 1rem; }
+
+        /* ===== DAILY SALES MONITOR TAB ===== */
+        .monitor-summary {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .monitor-stat {
+            background: var(--bg-panel); border: 1px solid var(--border-ghost);
+            border-radius: 12px; padding: 1rem 1.25rem; text-align: center;
+        }
+        .monitor-stat-label {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 0.4rem;
+        }
+        .monitor-stat-value {
+            font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(to right, var(--accent-cobalt), var(--accent-lavender));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .day-card {
+            background: var(--bg-panel); border: 1px solid var(--border-ghost);
+            border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+            transition: transform var(--transition-micro), box-shadow var(--transition-micro);
+        }
+        .day-card:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .day-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-ghost);
+        }
+        .day-date { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+        .day-totals { display: flex; gap: 0.75rem; }
+        .day-total-pill {
+            font-size: 0.78rem; font-weight: 600; font-variant-numeric: tabular-nums;
+            padding: 0.25rem 0.75rem; border-radius: 20px;
+            background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+        }
+        .day-total-pill.rev {
+            background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25); color: #6ee7b7;
+        }
+        .bar-row {
+            display: grid; grid-template-columns: 170px 1fr 56px;
+            align-items: center; gap: 0.75rem; margin-bottom: 0.45rem;
+        }
+        .bar-label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bar-track { height: 7px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+        .bar-fill {
+            height: 100%; border-radius: 4px;
+            background: linear-gradient(to right, var(--accent-cobalt), var(--accent-lavender));
+            transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bar-val { font-size: 0.78rem; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+
+        /* ===== REDUCED MOTION ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="app-container">
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="sidebar" role="complementary" aria-label="Menu Management">
+            <div class="sidebar-brand">
+                <div class="brand-logo" aria-hidden="true">Q*</div>
+                <div class="brand-text">
+                    <h1>Demand Forecaster</h1>
+                    <span>DMK ↔ MLE Perishable AI</span>
+                </div>
+            </div>
+
+            <div class="section-label">Active Perishable Menu</div>
+            <div class="menu-list" id="menu-list" role="list" aria-label="Perishable menu items">
+                <div class="empty-state" id="menu-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 0.75rem;">Loading menu…</p>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" id="btn-add-item" aria-label="Add new seasonal menu item" style="margin-top: 1rem;">
+                + Add New Seasonal Item
+            </button>
+
+            <div class="sidebar-footer">
+                <div class="active-count" id="active-count" aria-live="polite">0</div>
+                <p>Active Items</p>
+                <p style="margin-top: 0.75rem;">Thai AirAsia © 2026</p>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main id="main-content">
+            <header class="main-header">
+                <div>
+                    <h2>AI Optimal Loading Engine</h2>
+                    <p>7-Theory Operations Research Pipeline</p>
+                </div>
+                <div class="status-pill">
+                    <span class="status-dot" id="status-dot"></span>
+                    <span id="status-text">Engine Ready</span>
+                </div>
+            </header>
+
+            <!-- TAB NAVIGATION -->
+            <nav class="tab-nav" role="tablist" aria-label="Main sections">
+                <button class="tab-btn active" id="tab-btn-forecast" role="tab"
+                        aria-selected="true" aria-controls="tab-forecast"
+                        onclick="switchTab('forecast')">Forecast</button>
+                <button class="tab-btn" id="tab-btn-actuals" role="tab"
+                        aria-selected="false" aria-controls="tab-actuals"
+                        onclick="switchTab('actuals')">Post-Flight Actuals</button>
+                <button class="tab-btn" id="tab-btn-monitor" role="tab"
+                        aria-selected="false" aria-controls="tab-monitor"
+                        onclick="switchTab('monitor')">Daily Sales Monitor</button>
+            </nav>
+
+            <!-- ══ TAB: FORECAST ══ -->
+            <div class="tab-content active" id="tab-forecast" role="tabpanel" aria-labelledby="tab-btn-forecast">
+
+                <!-- KPI Row -->
+                <section class="kpi-row" aria-label="Key Performance Indicators">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Passengers</div>
+                        <div class="kpi-value" id="kpi-pax">—</div>
+                    </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-label">Net BoB Market</div>
+                        <div class="kpi-value" id="kpi-bob">—</div>
+                    </div>
+                    <div class="kpi-card amber">
+                        <div class="kpi-label">PBM Pre-Booked</div>
+                        <div class="kpi-value" id="kpi-pbm">—</div>
+                    </div>
+                    <div class="kpi-card lavender">
+                        <div class="kpi-label">Forecast Date</div>
+                        <div class="kpi-value" id="kpi-date" style="font-size: 1rem; word-break: break-all;">—</div>
+                    </div>
+                </section>
+
+                <!-- Upload Zone -->
+                <section class="panel" id="upload-panel">
+                    <div class="panel-title">1. Flight Demographic Data</div>
+                    <div class="panel-subtitle">
+                        Upload the upcoming flight's passenger manifest and PBM CSVs.
+                        FlightDate is auto-detected from the first column of the passenger file.
+                    </div>
+                    <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
+                         aria-label="Upload CSV files by clicking or dragging">
+                        <div class="upload-icon" aria-hidden="true">📂</div>
+                        <div class="upload-title">Drag &amp; drop CSV files here, or click to browse</div>
+                        <div class="upload-hint">
+                            Accepts: <span class="upload-highlight">Passenger_Nat_Age_Seat.csv</span>
+                            and <span class="upload-highlight">PBM-DATA.csv</span>
+                        </div>
+                        <div class="file-chips" id="file-chips"></div>
+                        <input type="file" id="file-input" multiple accept=".csv"
+                               style="display: none;" aria-hidden="true">
+                    </div>
+
+                    <!-- Flight date badge + pax/pbm counts + duplicate warnings -->
+                    <div class="upload-meta" id="upload-meta" style="display: none;">
+                        <span class="flight-date-badge" id="upload-date-badge">📅 —</span>
+                        <span class="pax-stat" id="upload-pax-stat">👥 — pax</span>
+                        <span class="pbm-stat" id="upload-pbm-stat">🍱 — PBM</span>
+                        <div class="upload-alert warn" id="upload-dup-warn" style="display: none;">
+                            ⚠ Passenger file for this date was already uploaded — overwriting with new data.
+                        </div>
+                        <div class="upload-alert warn" id="upload-pbm-dup-warn" style="display: none;">
+                            ⚠ PBM file for this date was already uploaded — overwriting with new data.
+                        </div>
+                    </div>
+
+                    <!-- Nationality breakdown pills (populated after upload) -->
+                    <div class="nat-row" id="nat-row" style="display:none;" aria-live="polite"></div>
+
+                    <button class="btn btn-primary" id="btn-forecast" aria-label="Run the AI forecast engine"
+                            disabled title="Upload passenger manifest and PBM file first">
+                        Run Hyper-Personalized Forecast 🚀
+                    </button>
+                </section>
+
+                <!-- Results Table -->
+                <section class="panel" id="results-panel">
+                    <div class="panel-title">2. Optimal Loading Recommendations (Q*)</div>
+                    <div class="panel-subtitle">Newsvendor-optimized stocking quantities for active perishable items</div>
+                    <div class="table-wrap">
+                        <table id="results-table" aria-label="Forecast results">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Cost</th>
+                                    <th>Critical Ratio</th>
+                                    <th>Stockout %</th>
+                                    <th>True Demand (μ)</th>
+                                    <th>Baseline Q*</th>
+                                    <th>Adjusted Q*</th>
+                                    <th>Δ</th>
+                                    <th>Theories</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-body">
+                                <tr>
+                                    <td colspan="10">
+                                        <div class="empty-state">
+                                            <div class="icon" aria-hidden="true">🧮</div>
+                                            <p>Click "Run Forecast" to generate optimal loading recommendations</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ══ TAB: POST-FLIGHT ACTUALS ══ -->
+            <div class="tab-content" id="tab-actuals" role="tabpanel" aria-labelledby="tab-btn-actuals">
+                <section class="panel">
+                    <div class="panel-title">Post-Flight Actuals Upload</div>
+                    <div class="panel-subtitle">
+                        After the flight lands, upload the actual sales and wastage CSVs (same format as
+                        SaleALL and Wastage files). Data is appended to the historical dataset and the
+                        Tobit model re-runs — this is the Theory 7 MLE Refit.
+                    </div>
+
+                    <div class="actuals-grid">
+                        <div>
+                            <div class="actuals-upload-label">Actual Sales CSV</div>
+                            <div class="upload-zone" id="actuals-sales-zone" role="button" tabindex="0"
+                                 aria-label="Upload actual sales CSV" style="padding: 1.5rem 1rem; margin-bottom: 0;">
+                                <div class="upload-icon" aria-hidden="true">📊</div>
+                                <div class="upload-title" style="font-size: 0.9rem;">Drop SaleALL CSV here</div>
+                                <div class="upload-hint">Same format as SaleALL2026_Month*.csv</div>
+                                <div class="actuals-chip" id="actuals-sales-chip"></div>
+                                <input type="file" id="actuals-sales-input" accept=".csv"
+                                       style="display: none;" aria-hidden="true">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="actuals-upload-label">Actual Wastage CSV</div>
+                            <div class="upload-zone" id="actuals-wastage-zone" role="button" tabindex="0"
+                                 aria-label="Upload actual wastage CSV" style="padding: 1.5rem 1rem; margin-bottom: 0;">
+                                <div class="upload-icon" aria-hidden="true">♻️</div>
+                                <div class="upload-title" style="font-size: 0.9rem;">Drop Wastage CSV here</div>
+                                <div class="upload-hint">Same format as Wastage-2026_Month*.csv</div>
+                                <div class="actuals-chip" id="actuals-wastage-chip"></div>
+                                <input type="file" id="actuals-wastage-input" accept=".csv"
+                                       style="display: none;" aria-hidden="true">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-submit-actuals"
+                            aria-label="Submit post-flight actuals and update model">
+                        Submit Actuals &amp; Update Model →
+                    </button>
+
+                    <div class="actuals-result" id="actuals-result" style="display: none;">
+                        <div class="actuals-result-title" id="actuals-result-msg"></div>
+                        <div class="table-wrap">
+                            <table class="bayesian-table" aria-label="Bayesian update results">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Updated μ</th>
+                                        <th>Updated σ</th>
+                                        <th>New Q*</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bayesian-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ══ TAB: DAILY SALES MONITOR ══ -->
+            <div class="tab-content" id="tab-monitor" role="tabpanel" aria-labelledby="tab-btn-monitor">
+                <section class="panel">
+                    <div class="panel-title">Daily Sales Monitor</div>
+                    <div class="panel-subtitle">
+                        Perishable sales from post-flight actuals uploads, broken down by day.
+                        Upload actuals in the "Post-Flight Actuals" tab to populate this view.
+                    </div>
+
+                    <div class="monitor-summary" id="monitor-summary" style="display: none;">
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-label">Days Tracked</div>
+                            <div class="monitor-stat-value" id="mon-days">0</div>
+                        </div>
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-label">Total Units Sold</div>
+                            <div class="monitor-stat-value" id="mon-units">0</div>
+                        </div>
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-label">Total Revenue (THB)</div>
+                            <div class="monitor-stat-value" id="mon-revenue">—</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" id="btn-refresh-monitor"
+                            onclick="loadDailySales()" aria-label="Refresh sales data"
+                            style="width: auto; margin-bottom: 1.5rem;">
+                        ↻ Refresh Data
+                    </button>
+
+                    <div id="monitor-cards">
+                        <div class="empty-state">
+                            <div class="icon" aria-hidden="true">📈</div>
+                            <p>No post-flight actuals uploaded yet.<br>
+                               Upload actual sales CSVs in the "Post-Flight Actuals" tab.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===== ADD ITEM MODAL ===== -->
+    <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal">
+            <h3 id="modal-title">Add New Seasonal Item</h3>
+            <form id="form-add-item">
+                <div class="form-group">
+                    <label for="new-name">Product Name</label>
+                    <input class="form-input" type="text" id="new-name" name="name"
+                           placeholder="e.g., Spicy Seafood Tom Yum Rice…" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="new-code">Product Code</label>
+                    <input class="form-input" type="text" id="new-code" name="code"
+                           placeholder="e.g., NEW-TY-001…" required autocomplete="off" spellcheck="false">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-price">Retail Price (THB)</label>
+                        <input class="form-input" type="number" id="new-price" name="price"
+                               placeholder="180…" required min="1" inputmode="numeric">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-cost">Unit Cost (THB)</label>
+                        <input class="form-input" type="number" id="new-cost" name="cost"
+                               placeholder="55…" required min="1" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="new-proxy">Proxy Item (Historical Baseline)</label>
+                    <select class="form-input" id="new-proxy" name="proxy_code">
+                        <option value="">Select a similar item…</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+        let menuItems = [];
+        let uploadedDemographics = null;
+        let uploadedFiles = [];
+        let actualsSalesFile = null;
+        let actualsWastageFile = null;
+
+        // ===== TAB SWITCHING =====
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-btn-${name}`).classList.add('active');
+            document.getElementById(`tab-btn-${name}`).setAttribute('aria-selected', 'true');
+            document.getElementById(`tab-${name}`).classList.add('active');
+            if (name === 'monitor') loadDailySales();
+        }
+
+        // ===== MENU MANAGEMENT =====
+        async function loadMenu() {
+            try {
+                const res = await fetch(`${API}/api/menu`);
+                const data = await res.json();
+                menuItems = data.items || [];
+                renderMenu();
+            } catch (e) {
+                document.getElementById('menu-loading').innerHTML =
+                    '<p style="color: var(--accent-crimson);">Failed to connect to server</p>';
+            }
+        }
+
+        function renderMenu() {
+            const list = document.getElementById('menu-list');
+            if (menuItems.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>No perishable items found</p></div>';
+                return;
+            }
+            list.innerHTML = menuItems.map(item => `
+                <div class="menu-item" role="listitem">
+                    <div class="menu-info">
+                        <div class="menu-name" title="${item.name}">${item.name}</div>
+                        <div class="menu-meta">฿${item.price} sell / ฿${item.cost} cost</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" ${item.active ? 'checked' : ''}
+                               onchange="toggleItem('${item.code}')"
+                               aria-label="Toggle ${item.name}">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+            `).join('');
+            updateActiveCount();
+            populateProxySelect();
+        }
+
+        async function toggleItem(code) {
+            try {
+                await fetch(`${API}/api/menu/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const item = menuItems.find(m => m.code === code);
+                if (item) item.active = !item.active;
+                updateActiveCount();
+            } catch (e) { console.error('Toggle failed:', e); }
+        }
+
+        function updateActiveCount() {
+            document.getElementById('active-count').textContent = menuItems.filter(m => m.active).length;
+        }
+
+        function populateProxySelect() {
+            const sel = document.getElementById('new-proxy');
+            const placeholder = sel.querySelector('option[value=""]') || document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Select a similar item…';
+            sel.innerHTML = '';
+            sel.appendChild(placeholder);
+            menuItems.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.code;
+                opt.textContent = item.name;
+                sel.appendChild(opt);
+            });
+        }
+
+        // ===== FILE UPLOAD (Forecast tab) =====
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput  = document.getElementById('file-input');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+        });
+        uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+        uploadZone.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+        function classifyFile(file) {
+            const n = file.name.toLowerCase();
+            if (n.includes('passenger') || n.includes('pax') || n.includes('nat_age') || n.includes('nat-age'))
+                return 'passenger';
+            if (n.includes('pbm') || n.includes('prebook') || n.includes('pre_book') || n.includes('pre-book'))
+                return 'pbm';
+            console.warn(`classifyFile: '${file.name}' did not match passenger or PBM patterns — treated as passenger`);
+            return 'passenger'; // default fallback
+        }
+
+        async function handleFiles(files) {
+            uploadedFiles = Array.from(files).filter(f => f.name.endsWith('.csv'));
+            if (uploadedFiles.length === 0) return;
+
+            const chips = document.getElementById('file-chips');
+            chips.innerHTML = uploadedFiles.map(f => `<span class="file-chip">✓ ${f.name}</span>`).join('');
+            uploadZone.classList.add('has-files');
+
+            const formData = new FormData();
+            uploadedFiles.forEach(f => formData.append(classifyFile(f), f));
+
+            try {
+                const res  = await fetch(`${API}/api/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.error) { alert(`Upload error: ${data.error}`); return; }
+                uploadedDemographics = data;
+                document.getElementById('btn-forecast').disabled = false;
+                document.getElementById('btn-forecast').title = '';
+
+                // Show meta row
+                const meta = document.getElementById('upload-meta');
+                meta.style.display = 'flex';
+
+                // Flight date badge
+                if (data.flight_date) {
+                    document.getElementById('upload-date-badge').textContent = `📅 Forecast Date: ${data.flight_date}`;
+                    document.getElementById('kpi-date').textContent = data.flight_date;
+                }
+
+                // Pax & PBM counts
+                document.getElementById('upload-pax-stat').textContent =
+                    `👥 ${(data.total_pax || 0).toLocaleString()} pax`;
+                document.getElementById('upload-pbm-stat').textContent =
+                    `🍱 ${(data.pbm_count || 0).toLocaleString()} PBM`;
+
+                // Duplicate warnings
+                document.getElementById('upload-dup-warn').style.display =
+                    data.already_uploaded ? 'flex' : 'none';
+                document.getElementById('upload-pbm-dup-warn').style.display =
+                    data.pbm_already_uploaded ? 'flex' : 'none';
+
+                // KPI cards
+                document.getElementById('kpi-pax').textContent = (data.total_pax || 0).toLocaleString();
+                document.getElementById('kpi-bob').textContent = (data.net_bob  || 0).toLocaleString();
+                document.getElementById('kpi-pbm').textContent = (data.pbm_count|| 0).toLocaleString();
+
+                // Nationality breakdown pills
+                const natRow = document.getElementById('nat-row');
+                if (data.nationalities && Object.keys(data.nationalities).length > 0) {
+                    const total = Object.values(data.nationalities).reduce((a, b) => a + b, 0);
+                    const sorted = Object.entries(data.nationalities).sort((a, b) => b[1] - a[1]);
+                    natRow.innerHTML = '<span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-right:0.25rem;">Nationality mix:</span>'
+                        + sorted.map(([country, count]) => {
+                            const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                            return `<span class="nat-pill">${country}<span class="nat-pct">${pct}%</span></span>`;
+                        }).join('');
+                    natRow.style.display = 'flex';
+                } else {
+                    natRow.style.display = 'none';
+                }
+
+            } catch (e) { alert('Upload failed — check that the CSV is valid and try again.'); }
+        }
+
+        // ===== FORECAST =====
+        document.getElementById('btn-forecast').addEventListener('click', runForecast);
+
+        async function runForecast() {
+            const btn = document.getElementById('btn-forecast');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Running Tobit + Newsvendor Engine…';
+
+            const dot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            dot.style.background = 'var(--accent-amber)';
+            dot.style.boxShadow  = '0 0 8px var(--accent-amber)';
+            statusText.textContent = 'Computing…';
+
+            try {
+                const res = await fetch(`${API}/api/forecast`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ demographics: uploadedDemographics })
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || `Server error ${res.status}`);
+                }
+                const results = await res.json();
+                renderResults(results);
+                dot.style.background = 'var(--accent-emerald)';
+                dot.style.boxShadow  = '0 0 8px var(--accent-emerald)';
+                statusText.textContent = `Optimized ${results.length} items`;
+            } catch (e) {
+                console.error('Forecast failed:', e);
+                dot.style.background = 'var(--accent-crimson)';
+                dot.style.boxShadow  = '0 0 8px var(--accent-crimson)';
+                statusText.textContent = 'Error — check server';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Run Hyper-Personalized Forecast 🚀';
+            }
+        }
+
+        function renderResults(results) {
+            const tbody = document.getElementById('results-body');
+            if (!results || results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><p>No active perishable items to optimize</p></div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = results.map(r => {
+                const delta = r.q_adjusted - r.q_baseline;
+                let badgeClass = 'badge-neutral', deltaText = '0';
+                if (delta > 0) { badgeClass = 'badge-up';   deltaText = `+${delta}`; }
+                else if (delta < 0) { badgeClass = 'badge-down'; deltaText = `${delta}`; }
+
+                const gammaTag = r.gamma != null && Math.abs(r.gamma - 1.0) > 0.01
+                    ? `<span class="theory-tag" style="margin-top:0.25rem;" title="Demographic multiplier (A1)">γ=${r.gamma.toFixed(2)}</span>`
+                    : '';
+
+                const theories = (r.theories_applied || []).map(t => {
+                    const isCold = t.includes('Substitution') || t.includes('Bayesian');
+                    return `<span class="theory-tag ${isCold ? 'cold' : ''}">${t}</span>`;
+                }).join('');
+
+                return `<tr data-sku="${r.code}">
+                    <td style="font-weight:600; max-width:200px; overflow:hidden; text-overflow:ellipsis;">${r.name}</td>
+                    <td>฿${r.price?.toFixed(0)}</td>
+                    <td>฿${r.cost?.toFixed(0)}</td>
+                    <td>${(r.critical_ratio * 100).toFixed(1)}%</td>
+                    <td>${r.stockout_pct?.toFixed(1)}%</td>
+                    <td>${r.mu?.toFixed(1)}</td>
+                    <td class="q-value">${r.q_baseline}</td>
+                    <td class="q-value" style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                        <input type="number" class="q-override"
+                               value="${r.q_adjusted}"
+                               data-baseline="${r.q_baseline}"
+                               min="0" step="1"
+                               aria-label="Adjusted Q* for ${r.name}">
+                        ${gammaTag}
+                    </td>
+                    <td><span class="${badgeClass} delta-cell">${deltaText}</span></td>
+                    <td><div class="theory-tags">${theories}</div></td>
+                </tr>`;
+            }).join('');
+
+            // Wire up manual override — updates Δ badge live
+            document.querySelectorAll('.q-override').forEach(input => {
+                input.addEventListener('input', () => {
+                    const baseline = parseInt(input.dataset.baseline) || 0;
+                    const val = parseInt(input.value) || 0;
+                    const d = val - baseline;
+                    const badge = input.closest('tr').querySelector('.delta-cell');
+                    badge.textContent = d > 0 ? `+${d}` : `${d}`;
+                    badge.className = `delta-cell ${d > 0 ? 'badge-up' : d < 0 ? 'badge-down' : 'badge-neutral'}`;
+                });
+            });
+        }
+
+        // ===== POST-FLIGHT ACTUALS TAB =====
+        const salesZone    = document.getElementById('actuals-sales-zone');
+        const wastageZone  = document.getElementById('actuals-wastage-zone');
+        const salesInput   = document.getElementById('actuals-sales-input');
+        const wastageInput = document.getElementById('actuals-wastage-input');
+
+        function wireActualsZone(zone, input, chipId, fileVar) {
+            zone.addEventListener('click', () => input.click());
+            zone.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+            });
+            zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault(); zone.classList.remove('drag-over');
+                const f = e.dataTransfer.files[0];
+                if (f && f.name.endsWith('.csv')) { setActualsFile(fileVar, f, chipId, zone); }
+            });
+            input.addEventListener('change', e => {
+                const f = e.target.files[0];
+                if (f) setActualsFile(fileVar, f, chipId, zone);
+            });
+        }
+
+        function setActualsFile(varName, file, chipId, zone) {
+            if (varName === 'sales')   actualsSalesFile   = file;
+            if (varName === 'wastage') actualsWastageFile = file;
+            document.getElementById(chipId).innerHTML =
+                `<span class="file-chip">✓ ${file.name}</span>`;
+            zone.classList.add('has-files');
+        }
+
+        wireActualsZone(salesZone,   salesInput,   'actuals-sales-chip',   'sales');
+        wireActualsZone(wastageZone, wastageInput, 'actuals-wastage-chip', 'wastage');
+
+        document.getElementById('btn-submit-actuals').addEventListener('click', async () => {
+            if (!actualsSalesFile && !actualsWastageFile) {
+                alert('Please upload at least one file (actual sales or wastage CSV).');
+                return;
+            }
+            const btn = document.getElementById('btn-submit-actuals');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Updating Model…';
+
+            const formData = new FormData();
+            if (actualsSalesFile)   formData.append('sales',   actualsSalesFile);
+            if (actualsWastageFile) formData.append('wastage', actualsWastageFile);
+
+            try {
+                const res  = await fetch(`${API}/api/actuals`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.error) { alert(`Error: ${data.error}`); return; }
+                showActualsResult(data);
+            } catch (e) {
+                console.error('Actuals submission failed:', e);
+                alert('Failed to submit actuals — check server connection.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Actuals &amp; Update Model →';
+            }
+        });
+
+        function showActualsResult(data) {
+            const panel = document.getElementById('actuals-result');
+            panel.style.display = 'block';
+            document.getElementById('actuals-result-msg').textContent =
+                `✓ ${data.message}  (${data.products_updated} products updated)`;
+
+            const tbody = document.getElementById('bayesian-body');
+            if (!data.bayesian_updates || data.bayesian_updates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No active items</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.bayesian_updates.map(r => `
+                <tr>
+                    <td style="font-weight:600;">${r.name}</td>
+                    <td>${r.mu?.toFixed(2)}</td>
+                    <td>${r.sigma?.toFixed(2)}</td>
+                    <td class="q-value">${r.q_star}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ===== DAILY SALES MONITOR TAB =====
+        async function loadDailySales() {
+            const cardsEl = document.getElementById('monitor-cards');
+            cardsEl.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:0.75rem;">Loading sales data…</p></div>';
+            try {
+                const res  = await fetch(`${API}/api/daily-sales`);
+                const data = await res.json();
+                renderDailySales(data.daily || []);
+            } catch (e) {
+                cardsEl.innerHTML = '<div class="empty-state"><p style="color:var(--accent-crimson);">Failed to load — check server connection.</p></div>';
+            }
+        }
+
+        function renderDailySales(daily) {
+            const cardsEl = document.getElementById('monitor-cards');
+            const summary = document.getElementById('monitor-summary');
+
+            if (!daily || daily.length === 0) {
+                cardsEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon" aria-hidden="true">📈</div>
+                        <p>No post-flight actuals uploaded yet.<br>
+                           Upload actual sales CSVs in the "Post-Flight Actuals" tab.</p>
+                    </div>`;
+                summary.style.display = 'none';
+                return;
+            }
+
+            const totalUnits   = daily.reduce((s, d) => s + d.total_units,   0);
+            const totalRevenue = daily.reduce((s, d) => s + d.total_revenue,  0);
+            document.getElementById('mon-days').textContent    = daily.length;
+            document.getElementById('mon-units').textContent   = totalUnits.toLocaleString();
+            document.getElementById('mon-revenue').textContent =
+                '฿' + totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            summary.style.display = 'grid';
+
+            cardsEl.innerHTML = daily.map(day => {
+                const maxUnits = Math.max(...day.products.map(p => p.units), 1);
+                const bars = day.products.slice(0, 8).map(p => {
+                    const pct = Math.round((p.units / maxUnits) * 100);
+                    return `<div class="bar-row">
+                        <div class="bar-label" title="${p.name}">${p.name}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width:${pct}%"></div>
+                        </div>
+                        <div class="bar-val">${p.units}</div>
+                    </div>`;
+                }).join('');
+
+                return `<div class="day-card">
+                    <div class="day-header">
+                        <div class="day-date">📅 ${day.date}</div>
+                        <div class="day-totals">
+                            <span class="day-total-pill">${day.total_units.toLocaleString()} units</span>
+                            <span class="day-total-pill rev">฿${day.total_revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+                        </div>
+                    </div>
+                    ${bars}
+                </div>`;
+            }).join('');
+        }
+
+        // ===== ADD ITEM MODAL =====
+        document.getElementById('btn-add-item').addEventListener('click', () => {
+            document.getElementById('modal-overlay').classList.add('active');
+            document.getElementById('new-name').focus();
+        });
+        document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
+        document.getElementById('modal-overlay').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.getElementById('form-add-item').reset();
+        }
+
+        document.getElementById('form-add-item').addEventListener('submit', async e => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const payload = {
+                name:       formData.get('name'),
+                code:       formData.get('code'),
+                price:      parseFloat(formData.get('price')),
+                cost:       parseFloat(formData.get('cost')),
+                proxy_code: formData.get('proxy_code') || null
+            };
+            try {
+                const res = await fetch(`${API}/api/menu/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert('Failed to add item: ' + (err.error || `Server error ${res.status}`));
+                    return;
+                }
+                closeModal();
+                await loadMenu();
+            } catch (e) { console.error('Add item failed:', e); }
+        });
+
+        // ===== INIT =====
+        loadMenu();
+    </script>
+</body>
+</html>

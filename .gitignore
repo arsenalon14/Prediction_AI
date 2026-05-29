@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.env
+venv/
+.venv/
+
+# Uploaded flight manifests (may contain PII)
+uploads/
+
+# Local data files (too large / sensitive — stored in C:\Users\...\Desktop\AI\)
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

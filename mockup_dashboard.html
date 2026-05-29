@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAA AI Forecast Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Toggles */
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .menu-name {
+            font-weight: 400;
+            font-size: 0.95rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--success);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Button */
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #6366f1);
+            color: white;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Drag & Drop Zone */
+        .upload-zone {
+            border: 2px dashed var(--accent);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(59, 130, 246, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .upload-zone:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #60a5fa;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .upload-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .highlight-text {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Results Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Layout specific */
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>✈️ Perishable Demand Forecaster</h1>
+        <div style="color: var(--text-muted); font-size: 0.9rem;">
+            DMK ↔ MLE Optimization Engine
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Left Column: Menu Management -->
+        <div class="glass-panel">
+            <h2>Active Menu Selection</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                Toggle items off to exclude them from the optimization engine.
+            </p>
+
+            <div class="menu-list">
+                <div class="menu-item">
+                    <span class="menu-name">Boba Thai Milk Tea</span>
+                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-name">ML NOI Fried Chicken Basil</span>
+                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-name">Uncle Chin Chicken Rice</span>
+                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-name">Palmyra Grilled Chicken</span>
+                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-name">Nasi Lemak</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-name">Seasonal Mango Dessert (Proxy)</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary">+ Add New Seasonal Item</button>
+        </div>
+
+        <!-- Right Column: Upload & Results -->
+        <div class="right-col">
+            
+            <div class="glass-panel">
+                <h2>1. Flight Demographic Upload</h2>
+                <div class="upload-zone" onclick="document.getElementById('file-upload').click()">
+                    <div class="upload-icon">📂</div>
+                    <div>Drag & drop the upcoming flight's CSV manifests here</div>
+                    <div class="upload-text">Requires: <span class="highlight-text">Passenger_Nat_Age_Seat.csv</span> and <span class="highlight-text">PBM-DATA.csv</span></div>
+                    <input type="file" id="file-upload" style="display: none;" multiple accept=".csv">
+                </div>
+                
+                <button class="btn btn-primary" id="run-btn">Run Hyper-Personalized Forecast 🚀</button>
+            </div>
+
+            <div class="glass-panel">
+                <h2>2. Optimal Loading Recommendations (Q*)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Critical Ratio</th>
+                            <th>Stockout Risk</th>
+                            <th>Demographic Shift</th>
+                            <th>Optimal Load (Q*)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Boba Thai Milk Tea</td>
+                            <td>58.7%</td>
+                            <td>57.9%</td>
+                            <td><span style="color: #34d399;">↑ High Thai Pax</span></td>
+                            <td><span class="stat-val">22</span> <span class="badge" style="margin-left: 8px">+4 Units</span></td>
+                        </tr>
+                        <tr>
+                            <td>ML NOI Fried Chicken Basil</td>
+                            <td>73.4%</td>
+                            <td>52.1%</td>
+                            <td><span style="color: #34d399;">↑ High Thai Pax</span></td>
+                            <td><span class="stat-val">12</span> <span class="badge" style="margin-left: 8px">+3 Units</span></td>
+                        </tr>
+                        <tr>
+                            <td>Palmyra Grilled Chicken</td>
+                            <td>68.2%</td>
+                            <td>52.1%</td>
+                            <td><span style="color: #ef4444;">↓ Low Chinese Pax</span></td>
+                            <td><span class="stat-val">7</span> <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.3); margin-left: 8px;">-3 Units</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Simple micro-animation for the button
+        document.getElementById('run-btn').addEventListener('click', function() {
+            this.innerText = "Calculating Tobit Engine...";
+            this.style.opacity = "0.8";
+            setTimeout(() => {
+                this.innerText = "Run Hyper-Personalized Forecast 🚀";
+                this.style.opacity = "1";
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

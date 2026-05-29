@@ -1,0 +1,158 @@
+{
+  "items": [
+    {
+      "code": "FNBG02000218",
+      "name": "BOBA MILK TEA",
+      "active": true,
+      "price": 100.0,
+      "cost": 41.0
+    },
+    {
+      "code": "FNBG02000888",
+      "name": "PINEAPPLE PRIK KLUA JUICE",
+      "active": false,
+      "price": 100.0,
+      "cost": 26.0
+    },
+    {
+      "code": "FNBG02000908",
+      "name": "MANGOSTEEN LEMONADE WITH PEACH JELLY",
+      "active": false,
+      "price": 100.0,
+      "cost": 38.0
+    },
+    {
+      "code": "FNBG03000025",
+      "name": "UNCLE CHIN CHICKEN RICE",
+      "active": true,
+      "price": 180.0,
+      "cost": 60.5
+    },
+    {
+      "code": "FNBG03000041",
+      "name": "ML NOI FRIED CHICKEN WITH BASIL ON RICE",
+      "active": true,
+      "price": 180.0,
+      "cost": 46.5
+    },
+    {
+      "code": "FNBG03000085",
+      "name": "Nasi Lemak",
+      "active": true,
+      "price": 180.0,
+      "cost": 65.5
+    },
+    {
+      "code": "FNBG03001931",
+      "name": "BASIL CHICKEN FRIED RICE",
+      "active": false,
+      "price": 140.0,
+      "cost": 39.5
+    },
+    {
+      "code": "FNBG03002005",
+      "name": "BAKED MAC DOUBLE CHEESE",
+      "active": false,
+      "price": 140.0,
+      "cost": 42.0
+    },
+    {
+      "code": "FNBG03002061",
+      "name": "PALMYRA GRILLED CHICKEN, STICKY RICE AND SOMTAM",
+      "active": true,
+      "price": 180.0,
+      "cost": 56.0
+    },
+    {
+      "code": "FNBG03002153",
+      "name": "LANNA KHAN TOK",
+      "active": false,
+      "price": 150.0,
+      "cost": 57.0
+    },
+    {
+      "code": "FNBG03002154",
+      "name": "KHAO SOI GAI",
+      "active": false,
+      "price": 150.0,
+      "cost": 50.5
+    },
+    {
+      "code": "FNBG03002158",
+      "name": "PHULAE PINEAPPLE CHEESECAKE",
+      "active": false,
+      "price": 90.0,
+      "cost": 35.0
+    },
+    {
+      "code": "FNBG03002180",
+      "name": "TUNA CORN & EBIKO KANIKAMA WITH SRIRACHA MAYO SANDWICH",
+      "active": false,
+      "price": 100.0,
+      "cost": 37.0
+    },
+    {
+      "code": "FNBG03002189",
+      "name": "UNCLE CHIN'S HAINANESE CHICKEN RICE",
+      "active": false,
+      "price": 180.0,
+      "cost": 57.5
+    },
+    {
+      "code": "FNBG03002191",
+      "name": "STEAMED SEAFOOD CURRY WITH YOUNG COCONUT AND RICE",
+      "active": false,
+      "price": 180.0,
+      "cost": 55.5
+    },
+    {
+      "code": "FNBG03002192",
+      "name": "CHAI XI x SANTAN BASIL NOODLES WITH GRILLED DUCK",
+      "active": false,
+      "price": 180.0,
+      "cost": 55.0
+    },
+    {
+      "code": "FNBG03002193",
+      "name": "COCONUT CHICKEN TENDER",
+      "active": true,
+      "price": 120.0,
+      "cost": 45.0
+    },
+    {
+      "code": "FNBG03002194",
+      "name": "YOKSOD PANDAN BALL",
+      "active": false,
+      "price": 100.0,
+      "cost": 45.0
+    },
+    {
+      "code": "FNBG03002233",
+      "name": "NAM TOK GAI YANG WITH LONGAN SAUCE AND STICKY RICE",
+      "active": true,
+      "price": 180.0,
+      "cost": 54.0
+    },
+    {
+      "code": "FNBG03002234",
+      "name": "SWEET STICKY RICE WITH LONGAN",
+      "active": true,
+      "price": 80.0,
+      "cost": 40.0
+    },
+    {
+      "code": "FNBG03002235",
+      "name": "EARL GREY TEA WITH FRESH LONGAN",
+      "active": true,
+      "price": 100.0,
+      "cost": 33.0
+    },
+    {
+      "code": "FNBG03002236",
+      "name": "KAYA BUTTER TOASTED",
+      "active": true,
+      "price": 80.0,
+      "cost": 35.0
+    }
+  ]
+}
