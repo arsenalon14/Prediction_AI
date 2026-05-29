@@ -1,7 +1,7 @@
 # AI Demand Forecasting & Inventory Optimization
 ## Thai AirAsia (TAA) Buy-on-Board Perishable Model
 
-This document outlines the end-to-end framework for forecasting and optimizing perishable buy-on-board inventory for Thai AirAsia (TAA). It establishes the **DMK→MLE→DMK** pair route as the atomic unit of decision-making, prioritizes the 10 relevant operations research theories, identifies critical data quality issues, and presents an elegant mathematical solution to bypass operational noise.
+This document outlines the end-to-end framework for forecasting and optimizing perishable buy-on-board inventory for Thai AirAsia (TAA). It establishes the **DMK→Flight 1→DMK** pair route as the atomic unit of decision-making, prioritizes the 10 relevant operations research theories, identifies critical data quality issues, and presents an elegant mathematical solution to bypass operational noise.
 
 ---
 
@@ -9,7 +9,7 @@ This document outlines the end-to-end framework for forecasting and optimizing p
 
 For low-cost carrier (LCC) operations, catering replenishment occurs exclusively at the primary hub (**DMK**) to minimize outstation turnaround times and ground service contracts. 
 
-* **Hard Constraint:** All perishable inventory loaded at DMK must be disposed of at the end of the return leg (**MLE→DMK**). 
+* **Hard Constraint:** All perishable inventory loaded at DMK must be disposed of at the end of the return leg (**Flight 1→DMK**). 
 * **Atomic Unit:** The **pair route (round trip)** is the single correct atomic unit for every forecasting and inventory decision. Leg-by-leg planning is mathematically and operationally incorrect because inventory cannot be replenished at the outstation.
 
 ---
@@ -41,7 +41,7 @@ In TAA operations, two fundamental data quality issues corrupt standard forecast
 When stock sells out, sales drop to zero. The actual customer demand after the stockout is lost (censored). Standard forecasting algorithms trained on raw sales data will systematically under-predict demand, leading to perpetual stockouts.
 
 ### Problem B: Crew Misattribution (Logging Errors)
-In LCC cabin operations, crew members frequently fail to open/close cart sessions accurately at the outstation (MLE). Consequently, sales transactions from the return sector (**MLE→DMK**) are commonly logged under the outbound sector (**DMK→MLE**), or vice versa. 
+In LCC cabin operations, crew members frequently fail to open/close cart sessions accurately at the outstation (Flight 1). Consequently, sales transactions from the return sector (**Flight 1→DMK**) are commonly logged under the outbound sector (**DMK→Flight 1**), or vice versa. 
 * **Impact:** Leg-specific sales data is highly inaccurate, rendering leg-by-leg forecasting useless.
 
 ### Problem C: Passenger Manifest Column A Header Anomaly (DictReader KeyError)
@@ -210,7 +210,7 @@ Linking demographic manifests directly to transaction receipts reveals distinct 
 
 ### G. Perishable Financial Parameters & Critical Ratio Matrix (2024–2025)
 
-By matching product purchase costs from `Cost Perishable.csv` to retail selling prices from `SaleALL` databases, we successfully calculated the **Critical Ratios (CR)** for each perishable product on the DMK-MLE-DMK route. In Newsvendor theory, the Critical Ratio determines the mathematically optimal service level (the target probability of satisfying all demand without running out of stock):
+By matching product purchase costs from `Cost Perishable.csv` to retail selling prices from `SaleALL` databases, we successfully calculated the **Critical Ratios (CR)** for each perishable product on the DMK-Flight 1-DMK route. In Newsvendor theory, the Critical Ratio determines the mathematically optimal service level (the target probability of satisfying all demand without running out of stock):
 
 $$\text{Critical Ratio (CR)} = \frac{C_u}{C_u + C_o} = \frac{p - c}{p}$$
 *(where $p$ is the retail selling price and $c$ is the unit purchase cost, assuming disposal penalty $h = 0$)*
@@ -306,8 +306,8 @@ To resolve both problems simultaneously, we implement an elegant modeling breakt
 
 ```
 Traditional (Corrupted):
-Sector 1 (DMK-MLE) Sales (Corrupted by Crew Misattribution)  ---> Leg 1 Forecast (Fails)
-Sector 2 (MLE-DMK) Sales (Corrupted by Crew Misattribution)  ---> Leg 2 Forecast (Fails)
+Sector 1  Sales (Corrupted by Crew Misattribution)  ---> Leg 1 Forecast (Fails)
+Sector 2  Sales (Corrupted by Crew Misattribution)  ---> Leg 2 Forecast (Fails)
 
 The Aggregation Solution (Robust):
 [ Sector 1 Sales ] + [ Sector 2 Sales ] ===> Total Pair Sales (Y_total) ---> Pair Forecast (Succeeds)
@@ -388,7 +388,7 @@ Given the loaded capacity $Q$ at DMK, the observed total sales $Y_{\text{total}}
 
 $$Y_{\text{total}} = \min(D_{\text{total}}, Q)$$
 
-Using Maximum Likelihood Estimation (MLE), the log-likelihood function for $N$ historical round-trip flights is:
+Using Maximum Likelihood Estimation (Flight 1), the log-likelihood function for $N$ historical round-trip flights is:
 
 $$\ln L(\mu_{\text{total}}, \sigma_{\text{total}}) = \sum_{j \in \text{Uncensored}} \ln \left[ \frac{1}{\sigma_{\text{total}}} \phi\left(\frac{Y_{\text{total}, j} - \mu_{\text{total}}}{\sigma_{\text{total}}}\right) \right] + \sum_{j \in \text{Censored}} \ln \left[ 1 - \Phi\left(\frac{Q_j - \mu_{\text{total}}}{\sigma_{\text{total}}}\right) \right]$$
 
@@ -525,10 +525,10 @@ To ensure absolute modeling accuracy and prevent logical errors, the development
 The theoretical mathematical architecture detailed in this document has been fully implemented into a production-ready application (a Python Flask Backend and an Interactive Web Dashboard). The development was executed strictly through the following **AI Skill Frameworks**:
 
 ### 8.1. Operations Research Integrity (`IFS-AI-SKILL`)
-* **Pipeline Enforcement:** The Python backend (`app.py`) executes the full 7-theory sequence. T1–T6 run at every forecast call. **T7 (MLE Refit)** triggers when post-flight actuals are uploaded via `/api/actuals`. **`/api/forecast` is blocked (HTTP 400) without an uploaded passenger manifest** — a flight-specific forecast is impossible without knowing net_bob (total pax − PBM count).
+* **Pipeline Enforcement:** The Python backend (`app.py`) executes the full 7-theory sequence. T1–T6 run at every forecast call. **T7 (Flight 1 Refit)** triggers when post-flight actuals are uploaded via `/api/actuals`. **`/api/forecast` is blocked (HTTP 400) without an uploaded passenger manifest** — a flight-specific forecast is impossible without knowing net_bob (total pax − PBM count).
 * **Monthly Demand Rate Model (T2):** Tobit is now fitted on the per-pax demand rate `r = units_sold / net_bob` per calendar month, using 2024–2026 historical data (~835 pair-route dates). This produces `(μ_rate, σ_rate)` per month per SKU. Q* is then `μ_rate × net_bob_up + z × σ_rate × net_bob_up`, where `net_bob_up` comes from the uploaded manifest.
 * **Discontinued Items:** Items with no sales data in the historical period naturally produce no monthly_params entry. The model falls back to the global rate (all months pooled). Items that are fully discontinued and no longer in `active_menu.json` produce no output at all.
-* **Algorithmic Rigor:** Tobit MLE uses `scipy.optimize.minimize` (Nelder-Mead). Critical Fractile uses `scipy.stats.norm.ppf`. Minimum 3 data points required per month for a valid monthly fit; below threshold → global rate fallback.
+* **Algorithmic Rigor:** Tobit Flight 1 uses `scipy.optimize.minimize` (Nelder-Mead). Critical Fractile uses `scipy.stats.norm.ppf`. Minimum 3 data points required per month for a valid monthly fit; below threshold → global rate fallback.
 
 ### 8.2. Backend Software Architecture (`karpathy-guidelines`)
 * **Simplicity First:** The entire backend is a single `app.py` file with no premature abstractions. Eight REST endpoints cover the full operational lifecycle:
@@ -541,7 +541,7 @@ The theoretical mathematical architecture detailed in this document has been ful
 | `/api/menu/add` | POST | Add new seasonal item (Theory 6 cold start) |
 | `/api/upload` | POST | Upload passenger manifest + PBM CSV; auto-detects FlightDate from first column; returns duplicate warning if date already uploaded |
 | `/api/forecast` | POST | Run full 7-theory pipeline; returns Q* per active item |
-| `/api/actuals` | POST | Upload post-flight actual sales + wastage CSVs; appends to `uploads/actuals/`; triggers Theory 7 MLE Refit |
+| `/api/actuals` | POST | Upload post-flight actual sales + wastage CSVs; appends to `uploads/actuals/`; triggers Theory 7 Flight 1 Refit |
 | `/api/daily-sales` | GET | Return per-day perishable sales from post-flight actuals uploads only |
 
 * **Goal-Driven Logic:** The system strictly parses only the `Perishable` category and ignores the flawed `wastage` column. All column lookups use case-insensitive matching with Index-0 fallback (Problem C solution). Post-flight actuals are automatically included in `_load_sales()` for every subsequent forecast run.
@@ -568,8 +568,8 @@ The operations team exports the actual `SaleALL` and `Wastage` CSVs for the comp
 **Step 2 — Append to Historical Dataset (Permanent Record)**
 The backend (`/api/actuals`) saves the uploaded files to `uploads/actuals/` as `sales_{YYYY-MM-DD}.csv` and `wastage_{YYYY-MM-DD}.csv`. The `_load_sales()` function automatically includes all files in the actuals directory when building the dataset for the next forecast run.
 
-**Step 3 — MLE Refit (Theory 7)**
-Immediately after saving, the backend re-runs the full Tobit MLE on the combined dataset (historical + all actuals). This is the **Theory 7 MLE Refit** step: the new flight's observation shifts the uncensored demand estimates (μ_rate, σ_rate) for each affected product. The updated parameters are returned to the dashboard as confirmation.
+**Step 3 — Flight 1 Refit (Theory 7)**
+Immediately after saving, the backend re-runs the full Tobit Flight 1 on the combined dataset (historical + all actuals). This is the **Theory 7 Flight 1 Refit** step: the new flight's observation shifts the uncensored demand estimates (μ_rate, σ_rate) for each affected product. The updated parameters are returned to the dashboard as confirmation.
 
 ### 9.2. FlightDate Capture from Passenger Manifest
 
@@ -610,7 +610,7 @@ A structured end-to-end code review (scrutinize + karpathy-guidelines) was perfo
 | **Blocker** | Theory 5 inflated Q* by the PBM ratio before demographic scaling (see Problem E) | `app.py:349` | `D_0 = mu / N_active` → `D_0 = mu / total_pax` |
 | **Major** | `net_bob` calculated from two files with no date cross-validation (see Problem F) | `app.py:580` | Returns HTTP 400 if `flight_date` and `pbm_date` differ |
 | **Major** | Server bound to all network interfaces, exposing Werkzeug debugger to LAN | `app.py:794` | `host="0.0.0.0"` → `host="127.0.0.1"` |
-| **Major** | Theory 7 labelled "Bayesian Updating" but implementation is a full Tobit MLE refit | `app.py` (multiple) | All labels and docstrings updated to "MLE-Refit" |
+| **Major** | Theory 7 labelled "Bayesian Updating" but implementation is a full Tobit Flight 1 refit | `app.py` (multiple) | All labels and docstrings updated to "Flight 1-Refit" |
 | **Moderate** | Upload errors (including date mismatch 400) were logged to browser console only | `forecast_app.html:916,946` | `console.error()` → `alert()` so ops staff see the message |
 | **Moderate** | `_col()` Index-0 fallback applied silently to all column types | `app.py:55` | Added `[WARN]` print to server console when fallback is triggered |
 | **Nit** | `classifyFile()` default fallback (unknown CSV → passenger) was silent | `forecast_app.html:899` | Added `console.warn()` to browser console |
@@ -631,9 +631,9 @@ Following a design review (grill-with-docs), the forecasting model was redesigne
 
 Verified via `test_api.py`: 400 without manifest (PASS), 200 with mock demographics (10 items, sensible Q* values, all 7 theory tags present).
 
-### 10.2. Theory 7 Clarification — MLE Refit vs. Bayesian Updating
+### 10.2. Theory 7 Clarification — Flight 1 Refit vs. Bayesian Updating
 
-The post-flight feedback loop (Theory 7) re-runs the **full Tobit MLE** on the combined historical + actuals dataset. This is frequentist, not Bayesian. A true Bayesian update would apply the prior distribution `(μ_prior, σ_prior)` and shift it proportionally to the weight of new evidence. The MLE refit is equivalent to Bayesian updating only when the prior is flat (uniform). In practice, with 1–2 new observations on top of 140+ historical records, the refit produces nearly identical results to the prior and the difference is negligible. The label was corrected for accuracy. No algorithmic change was made.
+The post-flight feedback loop (Theory 7) re-runs the **full Tobit Flight 1** on the combined historical + actuals dataset. This is frequentist, not Bayesian. A true Bayesian update would apply the prior distribution `(μ_prior, σ_prior)` and shift it proportionally to the weight of new evidence. The Flight 1 refit is equivalent to Bayesian updating only when the prior is flat (uniform). In practice, with 1–2 new observations on top of 140+ historical records, the refit produces nearly identical results to the prior and the difference is negligible. The label was corrected for accuracy. No algorithmic change was made.
 
 ### 10.3. Confirmed Correct Behaviors (No Change)
 
@@ -655,8 +655,8 @@ A second end-to-end scrutinize pass was performed on `app.py` and `forecast_app.
 | **Blocker** | `pbm_count = len(df)` counted water-bottle PBM codes in the upload, but historical training excluded them — 37.6% of all PBM rows are water codes → 8–11% systematic Q* underestimation (see Problem G) | `app.py:603` | `pbm_count = (~df[ssr_col].isin(WATER_CODES)).sum()` — food-only PBMs only |
 | **Major** | Both CSV files were saved to disk before date-mismatch validation; mismatched uploads left orphan files, causing false "already uploaded" warnings on the next valid upload | `app.py:562–610` | Parse both files into memory → validate dates → then write to disk |
 | **Major** | `runForecast()` did not check `res.ok`; a server 400/500 response caused a silent TypeError crash in `renderResults(results.length)`, leaving the UI stuck in "Computing…" | `forecast_app.html:972` | Added `if (!res.ok)` guard — server error message shown via `throw new Error(err.error)` |
-| **Moderate** | T7 theory tag `"T7:MLE-Refit(triggered_by_actuals_upload)"` appended on every forecast even when no actuals had been uploaded — misleads operators | `app.py:409,457` | Tag now conditional: `if any(ACTUALS_DIR.glob("sales_*.csv"))` |
-| **Moderate** | HTML label still read "Theory 7 Bayesian update" after backend label was corrected to MLE Refit | `forecast_app.html:649` | Updated to "Theory 7 MLE Refit" |
+| **Moderate** | T7 theory tag `"T7:Flight 1-Refit(triggered_by_actuals_upload)"` appended on every forecast even when no actuals had been uploaded — misleads operators | `app.py:409,457` | Tag now conditional: `if any(ACTUALS_DIR.glob("sales_*.csv"))` |
+| **Moderate** | HTML label still read "Theory 7 Bayesian update" after backend label was corrected to Flight 1 Refit | `forecast_app.html:649` | Updated to "Theory 7 Flight 1 Refit" |
 | **Moderate** | `_load_sales()` and `_load_wastage()` docstrings said "2026 CSVs" despite loading 2024–2026 history | `app.py:117,138` | Docstrings updated to "2024–2026" |
 | **Nit** | `form-add-item` submit handler closed the modal and reloaded the menu even on a 409 Conflict (duplicate SKU code), silently ignoring the error | `forecast_app.html:1193` | Added `res.ok` check — 409 now triggers `alert()` and modal stays open |
 
