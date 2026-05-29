@@ -472,10 +472,11 @@ def run_pipeline(active_items, demographics=None):
     # ── First pass: items WITH sales history ─────────────────────────────
     for item in active_items:
         code  = item["code"]
+        sku   = item.get("sku", code)   # real CSV lookup code; falls back to code
         proxy = item.get("proxy_code")
         theories = []
 
-        item_sales = sales_df[sales_df[code_col].astype(str).str.strip() == code].copy()
+        item_sales = sales_df[sales_df[code_col].astype(str).str.strip() == sku].copy()
         if item_sales.empty:
             continue  # no history → defer to proxy pass
 
@@ -488,7 +489,7 @@ def run_pipeline(active_items, demographics=None):
         # Add censoring cap from wastage
         daily["cap"] = np.inf
         if not wastage_df.empty and w_code_col:
-            w_item = wastage_df[wastage_df[w_code_col].astype(str).str.strip() == code]
+            w_item = wastage_df[wastage_df[w_code_col].astype(str).str.strip() == sku]
             if not w_item.empty:
                 loaded_map = w_item.groupby(w_date_col)[w_open_col].sum().to_dict()
                 daily["cap"] = daily["date"].map(loaded_map).fillna(np.inf)

@@ -5,154 +5,176 @@
       "name": "Item 1",
       "active": true,
       "price": 100.0,
-      "cost": 41.0
+      "cost": 41.0,
+      "sku": "FNBG02000218"
     },
     {
       "code": "ITEM002",
       "name": "Item 2",
       "active": false,
       "price": 100.0,
-      "cost": 26.0
+      "cost": 26.0,
+      "sku": "FNBG02000888"
     },
     {
       "code": "ITEM003",
       "name": "Item 3",
       "active": false,
       "price": 100.0,
-      "cost": 38.0
+      "cost": 38.0,
+      "sku": "FNBG02000908"
     },
     {
       "code": "ITEM004",
       "name": "Item 4",
       "active": true,
       "price": 180.0,
-      "cost": 60.5
+      "cost": 60.5,
+      "sku": "FNBG03000025"
     },
     {
       "code": "ITEM005",
       "name": "Item 5",
       "active": true,
       "price": 180.0,
-      "cost": 46.5
+      "cost": 46.5,
+      "sku": "FNBG03000041"
     },
     {
       "code": "ITEM006",
       "name": "Item 6",
       "active": true,
       "price": 180.0,
-      "cost": 65.5
+      "cost": 65.5,
+      "sku": "FNBG03000085"
     },
     {
       "code": "ITEM007",
       "name": "Item 7",
       "active": false,
       "price": 140.0,
-      "cost": 39.5
+      "cost": 39.5,
+      "sku": "FNBG03001931"
     },
     {
       "code": "ITEM008",
       "name": "Item 8",
       "active": false,
       "price": 140.0,
-      "cost": 42.0
+      "cost": 42.0,
+      "sku": "FNBG03002005"
     },
     {
       "code": "ITEM009",
       "name": "Item 9",
       "active": true,
       "price": 180.0,
-      "cost": 56.0
+      "cost": 56.0,
+      "sku": "FNBG03002061"
     },
     {
       "code": "ITEM010",
       "name": "Item 10",
       "active": false,
       "price": 150.0,
-      "cost": 57.0
+      "cost": 57.0,
+      "sku": "FNBG03002153"
     },
     {
       "code": "ITEM011",
       "name": "Item 11",
       "active": false,
       "price": 150.0,
-      "cost": 50.5
+      "cost": 50.5,
+      "sku": "FNBG03002154"
     },
     {
       "code": "ITEM012",
       "name": "Item 12",
       "active": false,
       "price": 90.0,
-      "cost": 35.0
+      "cost": 35.0,
+      "sku": "FNBG03002158"
     },
     {
       "code": "ITEM013",
       "name": "Item 13",
       "active": false,
       "price": 100.0,
-      "cost": 37.0
+      "cost": 37.0,
+      "sku": "FNBG03002180"
     },
     {
       "code": "ITEM014",
       "name": "Item 14",
       "active": false,
       "price": 180.0,
-      "cost": 57.5
+      "cost": 57.5,
+      "sku": "FNBG03002189"
     },
     {
       "code": "ITEM015",
       "name": "Item 15",
       "active": false,
       "price": 180.0,
-      "cost": 55.5
+      "cost": 55.5,
+      "sku": "FNBG03002191"
     },
     {
       "code": "ITEM016",
       "name": "Item 16",
       "active": false,
       "price": 180.0,
-      "cost": 55.0
+      "cost": 55.0,
+      "sku": "FNBG03002192"
     },
     {
       "code": "ITEM017",
       "name": "Item 17",
       "active": true,
       "price": 120.0,
-      "cost": 45.0
+      "cost": 45.0,
+      "sku": "FNBG03002193"
     },
     {
       "code": "ITEM018",
       "name": "Item 18",
       "active": false,
       "price": 100.0,
-      "cost": 45.0
+      "cost": 45.0,
+      "sku": "FNBG03002194"
     },
     {
       "code": "ITEM019",
       "name": "Item 19",
       "active": true,
       "price": 180.0,
-      "cost": 54.0
+      "cost": 54.0,
+      "sku": "FNBG03002233"
     },
     {
       "code": "ITEM020",
       "name": "Item 20",
       "active": true,
       "price": 80.0,
-      "cost": 40.0
+      "cost": 40.0,
+      "sku": "FNBG03002234"
     },
     {
       "code": "ITEM021",
       "name": "Item 21",
       "active": true,
       "price": 100.0,
-      "cost": 33.0
+      "cost": 33.0,
+      "sku": "FNBG03002235"
     },
     {
       "code": "ITEM022",
       "name": "Item 22",
       "active": true,
       "price": 80.0,
-      "cost": 35.0
+      "cost": 35.0,
+      "sku": "FNBG03002236"
     }
   ]
 }
