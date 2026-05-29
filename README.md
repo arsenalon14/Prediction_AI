@@ -131,14 +131,14 @@ python app.py
 
 | Product | SKU | Price | Cost | F\* |
 | :--- | :---: | :---: | :---: | :---: |
-| Boba Thai Milk Tea | `FNBG02000276` | 100 THB | 41 THB | 59.0% |
-| ML NOI Fried Chicken Basil | `FNBG03000041` | 150 THB | 48 THB | 68.0% |
-| Uncle Chin Chicken Rice | `FNBG03000025` | 150 THB | 60 THB | 60.0% |
-| Chicken Teriyaki with Rice | `FNBG03000027` | 150 THB | 51.77 THB | 65.5% |
-| Nasi Lemak | `FNBG03000085` | 150 THB | 65.50 THB | 56.3% |
-| Green Curry Chicken & Egg | `FNBG03001956` | 149 THB | 47 THB | 68.5% |
-| Palmyra Somtam Chicken | `FNBG03002061` | 150 THB | 56 THB | 62.7% |
-| The OG Burnt Cheesecake | `FNBG03002010` | 100 THB | 49 THB | 51.0% |
+| Item 23 | `ITEM023` | 100 THB | 41 THB | 59.0% |
+| Item 5 | `ITEM005` | 150 THB | 48 THB | 68.0% |
+| Item 4 | `ITEM004` | 150 THB | 60 THB | 60.0% |
+| Item 24 | `ITEM024` | 150 THB | 51.77 THB | 65.5% |
+| Item 6 | `ITEM006` | 150 THB | 65.50 THB | 56.3% |
+| Item 26 | `ITEM026` | 149 THB | 47 THB | 68.5% |
+| Item 9 | `ITEM009` | 150 THB | 56 THB | 62.7% |
+| Item 27 | `ITEM027` | 100 THB | 49 THB | 51.0% |
 
 Because underage cost (lost margin) exceeds overage cost (wasted food) for all items, the optimal strategy always carries a **positive safety stock buffer** above the mean Tobit demand.
 
@@ -148,11 +148,11 @@ Because underage cost (lost margin) exceeds overage cost (wasted food) for all i
 
 | Product | Historical Annual Profit | Optimized Q\* Profit | Uplift |
 | :--- | :---: | :---: | :---: |
-| Boba Thai Milk Tea (legacy SKU) | 197,009 THB | 239,893 THB | +21.8% |
-| ML NOI Fried Chicken Basil | 178,942 THB | 212,458 THB | +18.7% |
-| Uncle Chin Chicken Rice | 98,956 THB | 152,017 THB | +53.6% |
-| Chicken Teriyaki with Rice | 146,913 THB | 172,034 THB | +17.1% |
-| Boba Milk Tea (2025/2026 SKU) | −13,266 THB (loss) | 74,602 THB | Turnaround |
+| Item 23 (legacy SKU) | 197,009 THB | 239,893 THB | +21.8% |
+| Item 5 | 178,942 THB | 212,458 THB | +18.7% |
+| Item 4 | 98,956 THB | 152,017 THB | +53.6% |
+| Item 24 | 146,913 THB | 172,034 THB | +17.1% |
+| Item 1 (2025/2026 SKU) | −13,266 THB (loss) | 74,602 THB | Turnaround |
 
 ---
 

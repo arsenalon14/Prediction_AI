@@ -113,12 +113,12 @@ The transition from 2024 to 2025 shows structural menu updates and highly consis
 Empirical analysis of Buy-on-Board (BoB) transactions establishes the sales volume and revenue baseline for true perishable products (fresh food and desserts subject to single-pairing disposal):
 
 #### 1. Perishable Product Rankings (2024 vs. 2025)
-* **Boba Tea Dominance:** **Boba Milk Tea** is the absolute best-selling perishable item in both years (~5,500+ units annually generating over 540,000 THB in net revenue). 
-  * *Data Quality Detail:* In 2025, the item was logged under two distinct casing structures (`BOBA MILK TEA` and `Boba Thai Milk Tea`), which must be consolidated by the forecasting pre-processor.
+* **Boba Tea Dominance:** **Item 1** is the absolute best-selling perishable item in both years (~5,500+ units annually generating over 540,000 THB in net revenue). 
+  * *Data Quality Detail:* In 2025, the item was logged under two distinct casing structures (`Item 1` and `Item 23`), which must be consolidated by the forecasting pre-processor.
 * **Best-Selling Perishable Hot Meals:**
-  * **`ML NOI Fried Chicken with Basil on Rice`:** High-volume Thai favorite, generating **434,687 THB (2,696 units)** in 2024 and **226,380 THB (1,510 units)** in 2025.
-  * **`Uncle Chin Chicken Rice`:** Consistent standard performer, generating **429,765 THB (2,669 units)** in 2024 and **224,198 THB (1,495 units)** in 2025.
-  * **`PALMYRA GRILLED CHICKEN, STICKY RICE AND SOMTAM`:** A major new menu introduction in 2025 that became the #1 hot meal seller (**321,480 THB from 2,382 units**).
+  * **`Item 5`:** High-volume Thai favorite, generating **434,687 THB (2,696 units)** in 2024 and **226,380 THB (1,510 units)** in 2025.
+  * **`Item 4`:** Consistent standard performer, generating **429,765 THB (2,669 units)** in 2024 and **224,198 THB (1,495 units)** in 2025.
+  * **`Item 9`:** A major new menu introduction in 2025 that became the #1 hot meal seller (**321,480 THB from 2,382 units**).
 
 #### 2. Monthly Perishable Sales & Net Revenue (THB) Seasonality
 
@@ -150,18 +150,18 @@ Analysis of TAA's monthly food waste logs (`Wastage-2024.csv` and `Wastage-2025.
 
 | Rank | Product | Year | Quantity Loaded | Quantity Sold | Quantity Wasted | Sell-Through % | Flight Stockout % |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **1** | **Boba Thai Milk Tea** | **2024** | 6,594 | 4,819 | 1,775 | 73.1% | **37.2%** |
+| **1** | **Item 23** | **2024** | 6,594 | 4,819 | 1,775 | 73.1% | **37.2%** |
 | | | **2025** | 3,750 | 1,925 | 1,825 | 51.3% | **26.1%** |
-| **2** | **ML NOI Fried Chicken Basil** | **2024** | 3,452 | 2,297 | 1,155 | 66.5% | **39.4%** |
+| **2** | **Item 5** | **2024** | 3,452 | 2,297 | 1,155 | 66.5% | **39.4%** |
 | | | **2025** | 2,821 | 1,191 | 1,630 | 42.2% | **18.9%** |
-| **3** | **Uncle Chin Chicken Rice** | **2024** | 3,336 | 2,189 | 1,147 | 65.6% | **39.2%** |
+| **3** | **Item 4** | **2024** | 3,336 | 2,189 | 1,147 | 65.6% | **39.2%** |
 | | | **2025** | 2,685 | 1,141 | 1,544 | 42.5% | **19.5%** |
-| **4** | **Chicken Teriyaki with Rice** | **2024** | 3,240 | 2,206 | 1,034 | 68.1% | **43.3%** |
+| **4** | **Item 24** | **2024** | 3,240 | 2,206 | 1,034 | 68.1% | **43.3%** |
 | | | **2025** | 1,573 | 700 | 873 | 44.5% | **20.7%** |
-| **5** | **Nasi Lemak** | **2024** | 1,310 | 1,020 | 290 | 77.9% | **50.9%** |
+| **5** | **Item 6** | **2024** | 1,310 | 1,020 | 290 | 77.9% | **50.9%** |
 | | | **2025** | 1,246 | 668 | 578 | 53.6% | **31.3%** |
 | **6** | **Palmyra Chicken Somtam** | **2025** | 3,211 | 1,084 | 2,127 | 33.8% | **13.1%** |
-| **7** | **The OG Burnt Cheesecake** | **2025** | 1,874 | 871 | 1,003 | 46.5% | **25.1%** |
+| **7** | **Item 27** | **2025** | 1,874 | 871 | 1,003 | 46.5% | **25.1%** |
 
 #### 3. High Stockout Peaks (The Censoring Pain Points)
 * **High Systemic Under-catering (2024):** Stockout rates peaked severely during high-travel months:
@@ -202,11 +202,11 @@ In-flight buyers have a highly consistent age profile year-over-year:
 
 #### 3. Core Demographic Product Preferences (Food & Dessert SKUs)
 Linking demographic manifests directly to transaction receipts reveals distinct culinary preferences:
-* **Thai Passengers:** Prefer spicy and sweet staples. Their top dessert is **Boba Thai Milk Tea** and top hot meal is **ML NOI Fried Chicken with Basil on Rice**.
-* **Chinese Passengers:** Prefer non-spicy, savory foods. In 2024, their top meal was **Chicken Teriyaki with Rice**. In 2025, they migrated heavily to **PALMYRA GRILLED CHICKEN, STICKY RICE AND SOMTAM**. In 2026, their best-sellers are **CHANG MINERAL WATER**, **COKE**, and **AMERICANO (BLACK COFFEE)** in-flight.
+* **Thai Passengers:** Prefer spicy and sweet staples. Their top dessert is **Item 23** and top hot meal is **Item 5**.
+* **Chinese Passengers:** Prefer non-spicy, savory foods. In 2024, their top meal was **Item 24**. In 2025, they migrated heavily to **Item 9**. In 2026, their best-sellers are **CHANG MINERAL WATER**, **COKE**, and **AMERICANO (BLACK COFFEE)** in-flight.
 * **Maldivian Passengers:** Prefer highly spicy, quick-comfort options. Their top hot option remains **MAMA SHRIMP CREAMY TOM YAM** (spicy cup noodles), showing massive demand for hot, non-perishable snack options, alongside **CHANG MINERAL WATER** and **COKE** in-flight.
-* **Kids (0-12):** Prefer sweet/mild options. Their top-performing meals are **Chicken Teriyaki** (2024) and **Palmyra Somtam Chicken** (2025/2026), whereas spicier dishes (e.g. basil chicken) are avoided.
-* **Seniors (51+):** Prefer mild comfort foods. Their #1 hot meal is **Uncle Chin Chicken Rice**, followed closely by Boba Milk Tea.
+* **Kids (0-12):** Prefer sweet/mild options. Their top-performing meals are **Chicken Teriyaki** (2024) and **Item 9** (2025/2026), whereas spicier dishes (e.g. basil chicken) are avoided.
+* **Seniors (51+):** Prefer mild comfort foods. Their #1 hot meal is **Item 4**, followed closely by Item 1.
 
 ### G. Perishable Financial Parameters & Critical Ratio Matrix (2024–2025)
 
@@ -217,16 +217,16 @@ $$\text{Critical Ratio (CR)} = \frac{C_u}{C_u + C_o} = \frac{p - c}{p}$$
 
 | Product Name | SKU Code | Retail Price ($p$) | 2024 Cost ($c$) | 2025 Cost ($c$) | 2024 Critical Ratio (CR) | 2025 Critical Ratio (CR) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Boba Thai Milk Tea** / **BOBA MILK TEA** | `FNBG02000276` | **100.0 THB** | 41.00 THB | 41.00 THB | **59.0%** | **59.0%** |
-| **ML NOI Fried Chicken Basil** | `FNBG03000041` | **150.0 THB** | 48.00 THB | 48.00 THB | **68.0%** | **68.0%** |
-| **Uncle Chin Chicken Rice** | `FNBG03000025` | **150.0 THB** | 60.00 THB | 60.00 THB | **60.0%** | **60.0%** |
-| **Chicken Teriyaki with Rice** | `FNBG03000027` | **150.0 THB** | 51.77 THB | 51.77 THB | **65.5%** | **65.5%** |
-| **Nasi Lemak** | `FNBG03000085` | **150.0 THB** | 65.00 THB | 65.50 THB | **56.7%** | **56.3%** |
-| **Green Curry Chicken & Egg** | `FNBG03001956` | **149.0 THB** | 47.00 THB | 47.00 THB | **68.5%** | **68.5%** |
-| **Palmyra Somtam Chicken** *(2025)* | `FNBG03002061` | **150.0 THB** | N/A | 56.00 THB | N/A | **62.7%** |
-| **The OG Burnt Cheesecake** *(2025)* | `FNBG03002010` | **100.0 THB** | N/A | 49.00 THB | N/A | **51.0%** |
-| **Kua Kling Kai & Salted Egg** *(2025)* | `FNBG03002102` | **120.0 THB** | N/A | 49.00 THB | N/A | **59.2%** |
-| **Kids' Fried Rice** | `FNBG03001926` | **120.0 THB** | 45.00 THB | N/A | **62.5%** | N/A |
+| **Item 23** / **Item 1** | `ITEM023` | **100.0 THB** | 41.00 THB | 41.00 THB | **59.0%** | **59.0%** |
+| **Item 5** | `ITEM005` | **150.0 THB** | 48.00 THB | 48.00 THB | **68.0%** | **68.0%** |
+| **Item 4** | `ITEM004` | **150.0 THB** | 60.00 THB | 60.00 THB | **60.0%** | **60.0%** |
+| **Item 24** | `ITEM024` | **150.0 THB** | 51.77 THB | 51.77 THB | **65.5%** | **65.5%** |
+| **Item 6** | `ITEM006` | **150.0 THB** | 65.00 THB | 65.50 THB | **56.7%** | **56.3%** |
+| **Item 26** | `ITEM026` | **149.0 THB** | 47.00 THB | 47.00 THB | **68.5%** | **68.5%** |
+| **Item 9** *(2025)* | `ITEM009` | **150.0 THB** | N/A | 56.00 THB | N/A | **62.7%** |
+| **Item 27** *(2025)* | `ITEM027` | **100.0 THB** | N/A | 49.00 THB | N/A | **51.0%** |
+| **Item 28** *(2025)* | `ITEM028` | **120.0 THB** | N/A | 49.00 THB | N/A | **59.2%** |
+| **Item 25** | `ITEM025` | **120.0 THB** | 45.00 THB | N/A | **62.5%** | N/A |
 
 #### Forecasting & Optimization Implications
 * **Under-catering vs. Over-catering asymmetry:** Because perishables carry healthy margins on this route (Critical Ratios ranging between **$51.0\%$ and $68.5\%$**), the financial penalty for under-catering (losing $150 - 48 = 102$ THB for a sold-out Basil Chicken) is significantly larger than the cost of over-catering (losing the $48$ THB unit cost of a wasted meal).
@@ -329,7 +329,7 @@ The Aggregation Solution (Robust):
 When the airline introduces a brand-new seasonal menu item (e.g., swapping out Basil Chicken for a new Seafood dish), standard forecasting fails because there is exactly zero historical data. We solve this using a combined **Product Substitution / Bayesian Updating** strategy:
 
 1. **Product Feature Mapping (Similarity Engine):** The AI categorizes the new item by Protein, Flavor Profile, Cuisine, and Category.
-2. **Proxy Baseline Assignment:** The model links the new item to the most mathematically similar historical item (e.g., matching a new spicy chicken dish to the retired "ML NOI Fried Chicken Basil"). This provides a highly accurate Day-1 expected demand baseline ($\mu_{\text{proxy}}$).
+2. **Proxy Baseline Assignment:** The model links the new item to the most mathematically similar historical item (e.g., matching a new spicy chicken dish to the retired "Item 5"). This provides a highly accurate Day-1 expected demand baseline ($\mu_{\text{proxy}}$).
 3. **High-Margin "Exploration" Load (Newsvendor Theory):** Because we know the new item's Retail Price ($p$) and Unit Cost ($c$) from Day 1, the AI calculates its **Critical Ratio**. High-margin items receive an intentional safety stock buffer. Over-catering heavily during the first 3 days is a strategic necessity—if the new item stocks out, the demand becomes censored, and the model cannot learn its true maximum popularity.
 4. **Rapid Bayesian Updating:** As real sales data flows in, the model shifts from the Proxy Baseline to True Data. By Day 8, the proxy baseline is discarded entirely, and the AI optimizes the new item purely on its proven, uncensored Tobit demand curve.
 
@@ -498,14 +498,14 @@ The pure-numpy Tobit un-censoring model and collapsed Newsvendor optimization we
 
 | Product Name | SKU Code | Route Critical Ratio | Historical Annual Expected Profit | Optimized ($Q^*$) Expected Profit | Expected Profit Uplift % | Key Optimization Lever |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Boba Thai Milk Tea** | `FNBG02000276` | **59.0%** | 197,008.93 THB | 239,893.49 THB | **+21.77%** | Reduces over-catering in low season (May/July) |
-| **ML NOI Fried Chicken Basil** | `FNBG03000041` | **68.2%** | 178,942.03 THB | 212,458.29 THB | **+18.73%** | Positive safety stock during travel peaks (CNY/Songkran) |
-| **Uncle Chin Chicken Rice** | `FNBG03000025` | **59.9%** | 98,955.59 THB | 152,017.29 THB | **+53.62%** | Prevents heavy winter food waste (November losses) |
-| **Chicken Teriyaki with Rice** | `FNBG03000027` | **65.5%** | 146,912.63 THB | 172,034.35 THB | **+17.10%** | Fine-tunes monthly catering loading |
-| **BOBA MILK TEA (2025/2026)** | `FNBG02000218` | **59.0%** | -13,266.08 THB (Loss) | 74,601.87 THB | **Turnaround** | Cuts massive 2025/2026 retail over-catering waste |
+| **Item 23** | `ITEM023` | **59.0%** | 197,008.93 THB | 239,893.49 THB | **+21.77%** | Reduces over-catering in low season (May/July) |
+| **Item 5** | `ITEM005` | **68.2%** | 178,942.03 THB | 212,458.29 THB | **+18.73%** | Positive safety stock during travel peaks (CNY/Songkran) |
+| **Item 4** | `ITEM004` | **59.9%** | 98,955.59 THB | 152,017.29 THB | **+53.62%** | Prevents heavy winter food waste (November losses) |
+| **Item 24** | `ITEM024` | **65.5%** | 146,912.63 THB | 172,034.35 THB | **+17.10%** | Fine-tunes monthly catering loading |
+| **Item 1 (2025/2026)** | `ITEM001` | **59.0%** | -13,266.08 THB (Loss) | 74,601.87 THB | **Turnaround** | Cuts massive 2025/2026 retail over-catering waste |
 
 ### 2. Core Optimization Insights
-* **The Spoilage Turnaround (Boba Tea Case):** Under manual stocking heuristics, Boba Milk Tea (`FNBG02000218`) suffered from a net loss of **-13,266 THB** due to severe over-provisioning (e.g. loading 19.2 units in May but selling only 7.3, and loading 22.8 units in October but selling only 6.9). The Newsvendor optimization model successfully turns this around into a positive profit of **74,601.87 THB** by lowering loading caps in low-demand months while maintaining appropriate service levels.
+* **The Spoilage Turnaround (Boba Tea Case):** Under manual stocking heuristics, Item 1 (`ITEM001`) suffered from a net loss of **-13,266 THB** due to severe over-provisioning (e.g. loading 19.2 units in May but selling only 7.3, and loading 22.8 units in October but selling only 6.9). The Newsvendor optimization model successfully turns this around into a positive profit of **74,601.87 THB** by lowering loading caps in low-demand months while maintaining appropriate service levels.
 * **The High-Margin Uplift (Basil Chicken Case):** With a Critical Ratio of **68.2%**, Basil Chicken possesses very healthy margins. The Tobit model detected substantial censoring (stockouts) during CNY and Songkran, where true uncensored demand was **20% to 30% higher** than raw sales. The Newsvendor optimization naturally recommends a positive safety stock buffer (loading $Q^* = 10$ units vs the historical average of 9.5), successfully capturing high-value lost sales during travel surges.
 
 ---
