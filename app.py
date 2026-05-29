@@ -11,8 +11,12 @@ IFS-AI Perishable Demand Forecasting Server
   7. MLE Refit (triggered by post-flight actuals upload via /api/actuals)
 """
 
-import json, math, os, warnings
+import json, math, os, sys, warnings
 from pathlib import Path
+
+# Ensure stdout can handle Unicode (Greek γ, Thai chars) on Windows cp1252 consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import numpy as np
 import pandas as pd

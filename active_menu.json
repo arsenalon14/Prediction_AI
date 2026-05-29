@@ -153,6 +153,14 @@
       "active": true,
       "price": 80.0,
       "cost": 35.0
+    },
+    {
+      "code": "TST-DEBUG",
+      "name": "Debug Item",
+      "active": false,
+      "price": 100.0,
+      "cost": 40.0,
+      "proxy_code": null
     }
   ]
 }
