@@ -160,7 +160,7 @@ Analysis of TAA's monthly food waste logs (`Wastage-2024.csv` and `Wastage-2025.
 | | | **2025** | 1,573 | 700 | 873 | 44.5% | **20.7%** |
 | **5** | **Item 6** | **2024** | 1,310 | 1,020 | 290 | 77.9% | **50.9%** |
 | | | **2025** | 1,246 | 668 | 578 | 53.6% | **31.3%** |
-| **6** | **Palmyra Chicken Somtam** | **2025** | 3,211 | 1,084 | 2,127 | 33.8% | **13.1%** |
+| **6** | **Item 28** | **2025** | 3,211 | 1,084 | 2,127 | 33.8% | **13.1%** |
 | **7** | **Item 27** | **2025** | 1,874 | 871 | 1,003 | 46.5% | **25.1%** |
 
 #### 3. High Stockout Peaks (The Censoring Pain Points)
@@ -188,11 +188,11 @@ By performing a high-resolution inner-join between Buy-on-Board transaction seat
 
 | Nationality | 2024 Qty Purchased | 2025 Qty Purchased | 2026 Qty Purchased (to May 24) | Market Profile & Buying Behavior |
 | :--- | :---: | :---: | :---: | :--- |
-| **Thailand** | 31,232 | 27,008 | **9,347** | Heavy pre-bookers & spicier comfort food buyers (Boba Tea, Basil Chicken). |
-| **China** | 20,291 | 18,317 | **6,350** | Non-prebookers (BoB surgers) & sweet/savory meal buyers (Chicken Teriyaki). |
-| **Maldives** | 9,823 | 13,164 | **5,135** | High-frequency utility travelers (+37% growth in 2025, steady in 2026). |
-| **Russian Federation**| 3,452 | 4,112 | **1,720** | Steady winter/peak season buyers of mild beverages and snacks. |
-| **Japan** | 1,874 | 2,121 | **918** | Regular buyers of comfort foods and mineral water. |
+| **X** | 31,232 | 27,008 | **9,347** | Heavy pre-bookers & spicier comfort food buyers (Boba Tea, Basil Chicken). |
+| **C** | 20,291 | 18,317 | **6,350** | Non-prebookers (BoB surgers) & sweet/savory meal buyers (Chicken Teriyaki). |
+| **Y** | 9,823 | 13,164 | **5,135** | High-frequency utility travelers (+37% growth in 2025, steady in 2026). |
+| **R**| 3,452 | 4,112 | **1,720** | Steady winter/peak season buyers of mild beverages and snacks. |
+| **J** | 1,874 | 2,121 | **918** | Regular buyers of comfort foods and mineral water. |
 
 #### 2. Buyer Age Group Profile (2024–2026)
 In-flight buyers have a highly consistent age profile year-over-year:
@@ -202,9 +202,9 @@ In-flight buyers have a highly consistent age profile year-over-year:
 
 #### 3. Core Demographic Product Preferences (Food & Dessert SKUs)
 Linking demographic manifests directly to transaction receipts reveals distinct culinary preferences:
-* **Thai Passengers:** Prefer spicy and sweet staples. Their top dessert is **Item 23** and top hot meal is **Item 5**.
-* **Chinese Passengers:** Prefer non-spicy, savory foods. In 2024, their top meal was **Item 24**. In 2025, they migrated heavily to **Item 9**. In 2026, their best-sellers are **CHANG MINERAL WATER**, **COKE**, and **AMERICANO (BLACK COFFEE)** in-flight.
-* **Maldivian Passengers:** Prefer highly spicy, quick-comfort options. Their top hot option remains **MAMA SHRIMP CREAMY TOM YAM** (spicy cup noodles), showing massive demand for hot, non-perishable snack options, alongside **CHANG MINERAL WATER** and **COKE** in-flight.
+* **X Passengers:** Prefer spicy and sweet staples. Their top dessert is **Item 23** and top hot meal is **Item 5**.
+* **C Passengers:** Prefer non-spicy, savory foods. In 2024, their top meal was **Item 24**. In 2025, they migrated heavily to **Item 9**. In 2026, their best-sellers are **CHANG MINERAL WATER**, **COKE**, and **AMERICANO (BLACK COFFEE)** in-flight.
+* **Y Passengers:** Prefer highly spicy, quick-comfort options. Their top hot option remains **MAMA SHRIMP CREAMY TOM YAM** (spicy cup noodles), showing massive demand for hot, non-perishable snack options, alongside **CHANG MINERAL WATER** and **COKE** in-flight.
 * **Kids (0-12):** Prefer sweet/mild options. Their top-performing meals are **Chicken Teriyaki** (2024) and **Item 9** (2025/2026), whereas spicier dishes (e.g. basil chicken) are avoided.
 * **Seniors (51+):** Prefer mild comfort foods. Their #1 hot meal is **Item 4**, followed closely by Item 1.
 
