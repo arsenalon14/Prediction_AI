@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAA Perishable Demand Forecasting Presentation</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (THEME: BOLD AIRASIA)
+           =========================================== */
+        :root {
+            --bg-primary: #120c0c;
+            --bg-secondary: #1a1213;
+            --bg-card: #201617;
+            --accent-red: #ED1C24;
+            --accent-gold: #E3AE45;
+            --text-primary: #ffffff;
+            --text-secondary: #e2dcd5;
+            --text-muted: #8e8782;
+            
+            --font-display: 'Poppins', sans-serif;
+            --font-body: 'IBM Plex Sans', sans-serif;
+            
+            --slide-padding: 100px 140px;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.8s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ===========================================
+           MANDATORY FIXED 16:9 VIEWPORT & STAGE STYLES
+           =========================================== */
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .deck-viewport {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .deck-stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            transform-origin: 0 0;
+            background: var(--bg-primary);
+            font-family: var(--font-body);
+            color: var(--text-primary);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: var(--slide-padding);
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            background: var(--bg-primary);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        visibility var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.active,
+        .slide.visible {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 1;
+        }
+
+        img,
+        video,
+        canvas,
+        svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* ===========================================
+           SLIDE ANIMATION DECORATIONS & REVEALS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal.stagger-1 { transition-delay: 0.1s; }
+        .reveal.stagger-2 { transition-delay: 0.2s; }
+        .reveal.stagger-3 { transition-delay: 0.3s; }
+        .reveal.stagger-4 { transition-delay: 0.4s; }
+        .reveal.stagger-5 { transition-delay: 0.5s; }
+
+        /* ===========================================
+           GLOBAL SLIDE COMPONENTS
+           =========================================== */
+        .brand-stripe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, #7a0f12, #ED1C24, #F2602A, #E3AE45, #F6E2B0);
+            z-index: 100;
+        }
+
+        .slide-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 0 15px rgba(237, 28, 36, 0.4);
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            color: var(--accent-gold);
+        }
+
+        .slide-meta {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .slide-title {
+            font-family: var(--font-display);
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #ffffff 60%, #a19a95 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-footer {
+            position: absolute;
+            bottom: 40px;
+            left: 140px;
+            right: 140px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .slide-page-num {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        /* Background glows */
+        .glow-sphere {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(237, 28, 36, 0.06) 0%, rgba(0,0,0,0) 70%);
+            filter: blur(60px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Layout Grid Helpers */
+        .layout-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+            width: 100%;
+        }
+
+        .layout-columns-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+        }
+
+        /* Typography & Content styling */
+        .lead-text {
+            font-size: 28px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            font-weight: 300;
+            margin-bottom: 30px;
+        }
+
+        .bullet-list {
+            list-style: none;
+        }
+
+        .bullet-list li {
+            position: relative;
+            font-size: 24px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            padding-left: 35px;
+        }
+
+        .bullet-list li::before {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 14px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-red);
+            border-radius: 50%;
+        }
+
+        /* Cards & Widgets */
+        .metric-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .metric-card.accent {
+            border-color: rgba(237, 28, 36, 0.2);
+            background: linear-gradient(185deg, var(--bg-card) 0%, #1e0d0f 100%);
+        }
+
+        .metric-val {
+            font-family: var(--font-display);
+            font-size: 72px;
+            font-weight: 800;
+            color: var(--accent-red);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .metric-val.gold {
+            color: var(--accent-gold);
+        }
+
+        .metric-label {
+            font-size: 20px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-sub {
+            font-size: 16px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 20px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 15px 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            color: var(--accent-gold);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .data-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: white;
+        }
+
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLS (OUTSIDE STAGE)
+           =========================================== */
+        .deck-controls {
+            position: fixed;
+            left: 50%;
+            bottom: 22px;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(18, 12, 12, 0.85);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent-red);
+        }
+
+        .progress-text {
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* ===========================================
+           INLINE EDITING SYSTEM
+           =========================================== */
+        .edit-hotzone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        .edit-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10001;
+            background: var(--accent-red);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(237, 28, 36, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .edit-toggle.show,
+        .edit-toggle.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        [contenteditable="true"] {
+            outline: 2px dashed var(--accent-gold);
+            background: rgba(227, 174, 69, 0.05);
+            border-radius: 4px;
+            padding: 2px 6px;
+        }
+
+        [contenteditable="true"]:focus {
+            outline: 2px solid var(--accent-red);
+            background: rgba(237, 28, 36, 0.08);
+        }
+
+        /* Reduced Motion media query */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="deck-viewport">
+        <!-- Background decorative glows -->
+        <div class="glow-sphere" style="width: 800px; height: 800px; top: -100px; right: -100px;"></div>
+        <div class="glow-sphere" style="width: 700px; height: 700px; bottom: -100px; left: -100px; background: radial-gradient(circle, rgba(227, 174, 69, 0.04) 0%, rgba(0,0,0,0) 70%);"></div>
+
+        <!-- Design stage scaled as a whole -->
+        <main class="deck-stage" id="deckStage">
+            <div class="brand-stripe"></div>
+
+            <!-- SLIDE 1: TITLE SLIDE -->
+            <section class="slide title-slide active" style="justify-content: center; align-items: flex-start; padding: 120px 160px;">
+                <div class="logo-area reveal stagger-1" style="margin-bottom: 40px;">
+                    <div class="logo-icon">AA</div>
+                    <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                </div>
+
+                <div class="reveal stagger-2">
+                    <p style="font-family: var(--font-body); font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 6px; color: var(--accent-gold); margin-bottom: 20px;">
+                        Operations & Inventory Optimization
+                    </p>
+                    <h1 class="slide-title" style="font-size: 80px; margin-bottom: 30px;">
+                        AI-Powered Perishable<br>Demand Forecasting
+                    </h1>
+                    <p class="lead-text" style="max-width: 900px; font-size: 24px; color: var(--text-secondary);">
+                        Transitioning TAA's Buy-on-Board (BoB) inventory replenishment from manual heuristics to a 7-theory operations research pipeline on the DMK–MLE–DMK sector.
+                    </p>
+                </div>
+
+                <div class="slide-footer reveal stagger-3">
+                    <div>Thai AirAsia Operational Presentation</div>
+                    <div>Route Focus: <strong>DMK - MLE - DMK</strong></div>
+                    <div class="slide-page-num">1 / 13</div>
+                </div>
+            </section>
+
+
+            <!-- SLIDE 2: THE CRISIS -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Legacies & Losses</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">The Operational Crisis</h2>
+                
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                            TAA's manual stocking heuristics created a simultaneous waste and stockout penalty.
+                        </p>
+                        <ul class="bullet-list">
+                            <li><strong>65% to 76% Food Wastage:</strong> Standard heuristics forced disposal of 3 out of 4 loaded meals at the end of the round trip.</li>
+                            <li><strong>12% to 20% Stockout Rates:</strong> Despite over-catering overall, best-sellers consistently ran out early.</li>
+                            <li><strong>Shattered Margins:</strong> High-margin lost sales occurred alongside heavy physical spoilage costs.</li>
+                        </ul>
+                    </div>
+                    <div class="layout-columns-2 reveal stagger-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                        <div class="metric-card accent">
+                            <div class="metric-val">76%</div>
+                            <div class="metric-label">Max Spoilage</div>
+                            <div class="metric-sub">Discarded at DMK return</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val">20%</div>
+                            <div class="metric-label">Max Stockouts</div>
+                            <div class="metric-sub">Key items sold out</div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">2 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 3: ATOMIC UNIT -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Operations Design</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Atomic Unit: Pair-Route Aggregation</h2>
+                
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                             replenishment occurs exclusively at DMK to minimize turnaround times. Leg-specific planning is operationally and mathematically incorrect.
+                        </p>
+                        <ul class="bullet-list">
+                            <li><strong>Crew Misattribution Resolved:</strong> Crews frequently log return-leg sales on the outbound cart. Aggregation bypasses this noise completely.</li>
+                            <li><strong>Zero Outstation Contracts:</strong> No replenishment happens at MLE, making the round trip the single correct planning unit.</li>
+                            <li><strong>Total Sales Accuracy:</strong> Collapsing Sector 1 + Sector 2 sales yields 100% physically accurate data.</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card reveal stagger-3" style="align-items: center; justify-content: center; min-height: 300px;">
+                        <div style="font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--accent-gold); margin-bottom: 20px; text-transform: uppercase;">Decision Formula</div>
+                        <div style="font-family: var(--font-display); font-size: 40px; font-weight: 800; color: white; text-align: center; border: 2px dashed rgba(237, 28, 36, 0.4); padding: 30px; border-radius: 12px; background: rgba(0,0,0,0.2);">
+                            Y<sub>total</sub> = Y<sub>S1</sub> + Y<sub>S2</sub>
+                        </div>
+                        <div class="metric-sub" style="margin-top: 15px; text-align: center;">Collapsed S1 and S2 sales eliminate logging errors</div>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">3 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 4: TOBIT MLE -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Core Engine: T2</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Demand Censoring & Tobit MLE</h2>
+                
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                            When stock sells out, sales drop to zero. The remaining customer demand is hidden, or "censored".
+                        </p>
+                        <ul class="bullet-list">
+                            <li><strong>Latent Demand Recovery:</strong> Standard forecasting models under-predict because they fail to see lost sales.</li>
+                            <li><strong>Tobit MLE Fitting:</strong> Maximum Likelihood Estimation models uncensored sales using Normal PDF, and stockouts using Survival Functions.</li>
+                            <li><strong>Statistical Parameters:</strong> Recovers true mean demand rate (μ) and standard deviation (σ) for each calendar month.</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card accent reveal stagger-3" style="padding: 40px;">
+                        <div style="font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--accent-gold); margin-bottom: 20px; text-transform: uppercase;">Observed vs. True Demand</div>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                                <span style="font-size: 20px; color: var(--text-muted);">Observed Mean Sales</span>
+                                <span style="font-size: 24px; font-weight: 700; color: white;">9.5 units</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 20px; color: var(--accent-red); font-weight: 700;">True Demand (Tobit MLE)</span>
+                                <span style="font-size: 24px; font-weight: 700; color: var(--accent-red);">12.2 units</span>
+                            </div>
+                            <div class="metric-sub" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                                Tobit MLE mathematically recovers the +28% hidden demand during peak travel stockouts.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">4 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 5: HOW THE MODEL CALCULATES -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Optimization Math</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Step-by-Step Q* Calculation Pipeline</h2>
+
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                            Our engine executes a four-step pipeline to compute the optimal load Q* for each flight.
+                        </p>
+                        <ul class="bullet-list">
+                            <li><strong>Step 1: Tobit Rate Estimation (T2):</strong> Fits Tobit model on historical rates per passenger <code>r = units_sold / net_bob</code> per month, yielding true <code>μ_rate</code> and <code>σ_rate</code>.</li>
+                            <li><strong>Step 2: Margin Service Level (T3/T4):</strong> Solves Critical Fractile <code>F* = (Price - Cost) / Price</code> to find optimal z-score buffer.</li>
+                            <li><strong>Step 3: Baseline Scaling (T5):</strong> Multiplies rates by upcoming Net BoB: <code>Q*_base = (μ_rate * net_bob) + (z * σ_rate * net_bob)</code>.</li>
+                            <li><strong>Step 4: Demographic Mix Scale (T5b):</strong> Applies Gamma factor <code>γ</code> for the upcoming manifest: <code>Q*_final = ceil(γ * Q*_base)</code>.</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card accent reveal stagger-3" style="padding: 35px; justify-content: center;">
+                        <div style="font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--accent-gold); margin-bottom: 20px; text-transform: uppercase;">The Math Pipeline</div>
+                        <div style="font-family: var(--font-body); font-size: 18px; line-height: 1.5; color: var(--text-secondary); display: flex; flex-direction: column; gap: 15px;">
+                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent-red);">
+                                <strong>Rate parameters:</strong> μ_rate, σ_rate (Monthly Tobit MLE)
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent-gold);">
+                                <strong>Critical Fractile:</strong> z = Φ<sup>-1</sup>((p - c)/p)
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border-left: 3px solid white;">
+                                <strong>Flight Scale:</strong> Q* = ceil( γ × net_bob × (μ_rate + z × σ_rate) )
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">5 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 6: THE 7-THEORY OR PIPELINE -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Operations Research</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">The 7-Theory Operations Research Pipeline</h2>
+
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                            Our optimization engine is built on 7 academic and industry operations research theories:
+                        </p>
+                        <ul class="bullet-list" style="font-size: 20px;">
+                            <li><strong>T1: Pair-Route Aggregation</strong> — Sums outbound and return legs to eliminate cabin crew logging error.</li>
+                            <li><strong>T2: Demand Censoring (Tobit)</strong> — Maximum Likelihood model to find latent demand during stockouts.</li>
+                            <li><strong>T3: Newsvendor Model</strong> — Formulates underage cost (lost sales margin) vs overage cost (wastage).</li>
+                            <li><strong>T4: Critical Fractile</strong> — Establishes targeted service level based on product financial margins.</li>
+                        </ul>
+                    </div>
+                    <div class="reveal stagger-3">
+                        <ul class="bullet-list" style="font-size: 20px; margin-top: 50px;">
+                            <li><strong>T5: Flight-Specific Scaling</strong> — Scales baseline demand rate to the upcoming flight passenger capacity.</li>
+                            <li><strong>T5b: Demographic Gamma (A1)</strong> — Adjusts loads based on upcoming manifest nationality deviation.</li>
+                            <li><strong>T6: Product Substitution (Cold Start)</strong> — Matches new menu items to historical proxy SKUs.</li>
+                            <li><strong>T7: MLE Refit (Feedback Loop)</strong> — Automatically updates parameters using post-flight actuals uploads.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">6 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 7: CRITICAL FRACTILE -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Core Engine: T3/T4</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">The Critical Fractile Model</h2>
+                
+                <div class="reveal stagger-2" style="margin-bottom: 30px;">
+                    <p class="lead-text" style="max-width: 1200px;">
+                        Because perishable items carry healthy margins, the financial penalty for under-catering (lost sales) is significantly higher than the cost of over-catering (wasted food).
+                    </p>
+                </div>
+
+                <div class="layout-split">
+                    <div class="reveal stagger-3">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Price</th>
+                                    <th>Cost</th>
+                                    <th>Critical Ratio (F*)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Green Curry Chicken & Egg</td>
+                                    <td>149 THB</td>
+                                    <td>47 THB</td>
+                                    <td style="font-weight: 700; color: var(--accent-red);">68.5%</td>
+                                </tr>
+                                <tr>
+                                    <td>ML NOI Fried Chicken Basil</td>
+                                    <td>150 THB</td>
+                                    <td>48 THB</td>
+                                    <td style="font-weight: 700; color: var(--accent-red);">68.0%</td>
+                                </tr>
+                                <tr>
+                                    <td>Chicken Teriyaki with Rice</td>
+                                    <td>150 THB</td>
+                                    <td>51.8 THB</td>
+                                    <td style="font-weight: 700; color: var(--accent-gold);">65.5%</td>
+                                </tr>
+                                <tr>
+                                    <td>Boba Thai Milk Tea</td>
+                                    <td>100 THB</td>
+                                    <td>41 THB</td>
+                                    <td style="font-weight: 700; color: var(--text-secondary);">59.0%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="metric-card reveal stagger-4">
+                        <div style="font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--accent-gold); margin-bottom: 20px; text-transform: uppercase;">Optimization Result</div>
+                        <p style="font-size: 20px; line-height: 1.6; color: var(--text-secondary);">
+                            The model naturally establishes a <strong>positive safety stock buffer</strong> above mean demand. This ensures we satisfy high-margin passenger demand during travel surges rather than under-stocking.
+                        </p>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">7 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 8: DEMOGRAPHIC INSIGHTS -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Demographics</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Passenger Demographic Profiles</h2>
+                
+                <div class="layout-columns-3 reveal stagger-2">
+                    <div class="metric-card">
+                        <div style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--accent-red); margin-bottom: 15px;">Thai Passengers</div>
+                        <p style="font-size: 18px; line-height: 1.6; color: var(--text-secondary);">
+                            Heavy pre-bookers (30% to 69% of PBMs). Strong preference for Comfort Foods and Boba Thai Milk Tea.
+                        </p>
+                    </div>
+                    <div class="metric-card accent">
+                        <div style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--accent-gold); margin-bottom: 15px;">Chinese Passengers</div>
+                        <p style="font-size: 18px; line-height: 1.6; color: var(--text-secondary);">
+                            Rarely pre-book (8% to 20% of PBMs). Cause massive surges in Buy-on-Board sales during peak seasons.
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: white; margin-bottom: 15px;">Maldives Nationals</div>
+                        <p style="font-size: 18px; line-height: 1.6; color: var(--text-secondary);">
+                            Steady utility travelers. High demand for spicy cup options (Mama Tom Yam) and mineral water.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="reveal stagger-3" style="margin-top: 40px; padding: 25px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); font-size: 20px; line-height: 1.6;">
+                    <strong>Market Profile Implication:</strong> High-volume tourist segments do not pre-book. We must rely on accurate Buy-on-Board (BoB) stock allocation to avoid missing revenue.
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">8 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 9: PRE-FLIGHT SCALING -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Operations Feed: T5b</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Pre-Flight Demographic Scaling</h2>
+                
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                            Adjusts the baseline load (Q*) per flight 2–3 days before departure based on the upcoming passenger manifest.
+                        </p>
+                        <ul class="bullet-list">
+                            <li><strong>Preference Weights:</strong> Integrates historical purchase records matching seat number to passenger nationality.</li>
+                            <li><strong>Dynamic Gamma (γ) Multiplier:</strong> Compares the upcoming nationality mix to the monthly historical baseline.</li>
+                            <li><strong>Targeted Loading:</strong> Scales recommendations up or down based on mix deviations (e.g. Thai Songkran surge vs. Summer Chinese peak).</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card accent reveal stagger-3" style="align-items: center; justify-content: center; min-height: 320px;">
+                        <div style="font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--accent-gold); margin-bottom: 25px; text-transform: uppercase;">Adjustment Model</div>
+                        <div style="font-family: var(--font-display); font-size: 38px; font-weight: 800; color: white; border: 2px dashed rgba(237, 28, 36, 0.4); padding: 30px; border-radius: 12px; text-align: center; background: rgba(0,0,0,0.2);">
+                            Q*<sub>adjusted</sub> = &lceil; &gamma; &times; Q*<sub>baseline</sub> &rceil;
+                        </div>
+                        <div class="metric-sub" style="margin-top: 15px; text-align: center;">γ > 1.0 increases load; γ < 1.0 lowers load</div>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">9 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 10: WATER CODE CORRECTION -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Data Quality</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Clean Data: Water Code Correction</h2>
+                
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                            Eliminating denominator mismatch errors is critical to forecasting integrity.
+                        </p>
+                        <ul class="bullet-list">
+                            <li><strong>The Bug:</strong> Live manifests counted water bottles as perishable PBMs, whereas training data excluded them.</li>
+                            <li><strong>The Impact:</strong> Artificially lowered the net boarded BoB count (N<sub>active</sub>), causing a systematic 8–11% under-catering on every flight.</li>
+                            <li><strong>The Solution:</strong> Automated filters exclude non-perishable water codes (BWFD, BWAK, BWHL, WBHL) in all live calculations.</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card reveal stagger-3" style="justify-content: space-between;">
+                        <div>
+                            <div class="metric-val" style="color: var(--accent-gold);">8-11%</div>
+                            <div class="metric-label">Recovered Capacity</div>
+                            <div class="metric-sub">Eliminated systematic forecast error</div>
+                        </div>
+                        <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; font-size: 18px; color: var(--text-secondary); line-height: 1.5;">
+                            "Denominator alignment ensures the training model and the live deployment compute N<sub>active</sub> identically."
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">10 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 11: FINANCIAL IMPACT -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Results</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Projected Financial Impact</h2>
+                
+                <div class="reveal stagger-2" style="margin-bottom: 25px;">
+                    <p class="lead-text" style="max-width: 1200px;">
+                        Running the model against historical flight data demonstrates substantial profitability turnarounds:
+                    </p>
+                </div>
+
+                <div class="layout-split">
+                    <div class="reveal stagger-3">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Historical Annual Profit</th>
+                                    <th>Optimized Q* Profit</th>
+                                    <th>Expected Uplift</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Uncle Chin Chicken Rice</td>
+                                    <td>98,956 THB</td>
+                                    <td>152,017 THB</td>
+                                    <td style="font-weight: 700; color: var(--accent-red);">+53.6%</td>
+                                </tr>
+                                <tr>
+                                    <td>Boba Thai Milk Tea (Legacy)</td>
+                                    <td>197,009 THB</td>
+                                    <td>239,893 THB</td>
+                                    <td style="font-weight: 700; color: var(--accent-red);">+21.8%</td>
+                                </tr>
+                                <tr>
+                                    <td>ML NOI Basil Chicken Rice</td>
+                                    <td>178,942 THB</td>
+                                    <td>212,458 THB</td>
+                                    <td style="font-weight: 700; color: var(--accent-gold);">+18.7%</td>
+                                </tr>
+                                <tr>
+                                    <td>BOBA MILK TEA (2025/2026)</td>
+                                    <td style="color: #ff6666;">-13,266 THB</td>
+                                    <td>74,602 THB</td>
+                                    <td style="font-weight: 700; color: var(--accent-red);">Turnaround</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="metric-card accent reveal stagger-4">
+                        <div class="metric-val gold">+53.6%</div>
+                        <div class="metric-label">Max Item Profit Uplift</div>
+                        <div class="metric-sub">Achieved on Uncle Chin Chicken Rice by minimizing low season food waste.</div>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">11 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 12: WORKFLOW -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Operations</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">The Operational Cycle</h2>
+                
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <div style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--accent-red); margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                            Pre-Flight (2-3 Days Out)
+                        </div>
+                        <ul class="bullet-list" style="margin-bottom: 40px;">
+                            <li>Upload passenger manifest and pre-booked meals.</li>
+                            <li>Run 7-theory pipeline to compute Q* optimal loading.</li>
+                            <li>Cater the aircraft at DMK hub per recommendation.</li>
+                        </ul>
+                    </div>
+                    <div class="reveal stagger-3">
+                        <div style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--accent-gold); margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                            Post-Flight Reconcile
+                        </div>
+                        <ul class="bullet-list">
+                            <li>Upload post-flight actual sales, wastage, and boarding passenger manifest.</li>
+                            <li>System saves files to actuals directory.</li>
+                            <li>Triggers Theory 7 MLE Refit to update models for future flights.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">12 / 13</div>
+                </footer>
+            </section>
+
+
+            <!-- SLIDE 13: NEXT STEPS -->
+            <section class="slide">
+                <header class="slide-header">
+                    <div class="logo-area">
+                        <div class="logo-icon">AA</div>
+                        <div class="logo-text">Thai AirAsia <span>AI</span></div>
+                    </div>
+                    <div class="slide-meta">Conclusion</div>
+                </header>
+
+                <h2 class="slide-title reveal stagger-1">Empowering TAA Retail</h2>
+                
+                <div class="layout-split">
+                    <div class="reveal stagger-2">
+                        <p class="lead-text">
+                            Deploying operations research to secure Thai AirAsia's in-flight retail margins.
+                        </p>
+                        <ul class="bullet-list">
+                            <li><strong>Minimize Food Waste:</strong> Restricts unnecessary spoilage in low season flights.</li>
+                            <li><strong>Capture Lost Sales:</strong> Recommends positive buffers for best-sellers.</li>
+                            <li><strong>Scale Platform:</strong> Deploy to other high-capacity routes out of DMK hub.</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card accent reveal stagger-3" style="justify-content: center; align-items: center; text-align: center; padding: 50px;">
+                        <div style="font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--accent-gold); margin-bottom: 20px;">Thank You</div>
+                        <p style="font-size: 22px; color: var(--text-secondary); line-height: 1.5; font-weight: 300;">
+                            Ready to deploy and optimize TAA's in-flight retail profitability.
+                        </p>
+                    </div>
+                </div>
+
+                <footer class="slide-footer">
+                    <div>TAA AI Perishable Demand Forecasting</div>
+                    <div class="slide-page-num">13 / 13</div>
+                </footer>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- PRESENTATION CHROME CONTROLS -->
+    <div class="deck-controls">
+        <button class="control-btn" id="btnPrev" title="Previous (←)">◀</button>
+        <div class="progress-text" id="progressText">1 / 13</div>
+        <button class="control-btn" id="btnNext" title="Next (→ / Space)">▶</button>
+    </div>
+
+    <!-- INLINE EDITOR HOVER AND CONTROLS -->
+    <div class="edit-hotzone"></div>
+    <button class="edit-toggle" id="editToggle" title="Toggle Edit Mode (E)">✏️ Edit Slide Content</button>
+
+    <script>
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.stage = document.getElementById('deckStage');
+                this.progressText = document.getElementById('progressText');
+                
+                this.setupStageScale();
+                this.setupKeyboardNav();
+                this.setupMouseNav();
+                this.setupTouchNav();
+                this.showSlide(0);
+            }
+
+            setupStageScale() {
+                const scale = () => {
+                    const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+                    const x = (window.innerWidth - 1920 * factor) / 2;
+                    const y = (window.innerHeight - 1080 * factor) / 2;
+                    this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+                };
+                scale();
+                window.addEventListener('resize', scale);
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.getAttribute('contenteditable') === 'true') return;
+                    
+                    if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'PageDown') {
+                        this.nextSlide();
+                    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                        this.prevSlide();
+                    } else if (e.key === 'Home') {
+                        this.showSlide(0);
+                    } else if (e.key === 'End') {
+                        this.showSlide(this.slides.length - 1);
+                    }
+                });
+            }
+
+            setupMouseNav() {
+                document.getElementById('btnPrev').addEventListener('click', () => this.prevSlide());
+                document.getElementById('btnNext').addEventListener('click', () => this.nextSlide());
+            }
+
+            setupTouchNav() {
+                let startX = 0;
+                document.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    const diffX = e.changedTouches[0].clientX - startX;
+                    if (Math.abs(diffX) > 80) {
+                        if (diffX < 0) this.nextSlide();
+                        else this.prevSlide();
+                    }
+                }, { passive: true });
+            }
+
+            showSlide(index) {
+                this.currentSlide = Math.max(0, Math.min(index, this.slides.length - 1));
+                this.slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === this.currentSlide);
+                    slide.classList.toggle('visible', i === this.currentSlide);
+                });
+                
+                // Update page progress indicators
+                this.progressText.textContent = `${this.currentSlide + 1} / ${this.slides.length}`;
+            }
+
+            nextSlide() {
+                if (this.currentSlide < this.slides.length - 1) {
+                    this.showSlide(this.currentSlide + 1);
+                }
+            }
+
+            prevSlide() {
+                if (this.currentSlide > 0) {
+                    this.showSlide(this.currentSlide - 1);
+                }
+            }
+        }
+
+        /* ===========================================
+           INLINE WYSIWYG EDITOR SYSTEM
+           =========================================== */
+        class InlineEditor {
+            constructor() {
+                this.isActive = false;
+                this.toggleBtn = document.getElementById('editToggle');
+                this.hotzone = document.querySelector('.edit-hotzone');
+                this.hideTimeout = null;
+                
+                this.setupToggle();
+                this.loadSavedContent();
+            }
+
+            setupToggle() {
+                // Hotzone hover with 400ms grace period
+                this.hotzone.addEventListener('mouseenter', () => {
+                    clearTimeout(this.hideTimeout);
+                    this.toggleBtn.classList.add('show');
+                });
+                this.hotzone.addEventListener('mouseleave', () => {
+                    this.hideTimeout = setTimeout(() => {
+                        if (!this.isActive) this.toggleBtn.classList.remove('show');
+                    }, 400);
+                });
+                
+                this.toggleBtn.addEventListener('mouseenter', () => {
+                    clearTimeout(this.hideTimeout);
+                });
+                this.toggleBtn.addEventListener('mouseleave', () => {
+                    this.hideTimeout = setTimeout(() => {
+                        if (!this.isActive) this.toggleBtn.classList.remove('show');
+                    }, 400);
+                });
+
+                // Toggle click or hotzone click triggers edit mode
+                const triggerToggle = () => this.toggleEditMode();
+                this.toggleBtn.addEventListener('click', triggerToggle);
+                this.hotzone.addEventListener('click', triggerToggle);
+
+                // Keyboard shortcut E
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+                        this.toggleEditMode();
+                    }
+                });
+            }
+
+            toggleEditMode() {
+                this.isActive = !this.isActive;
+                this.toggleBtn.classList.toggle('active', this.isActive);
+                
+                if (this.isActive) {
+                    this.toggleBtn.textContent = '💾 Save Slide Changes';
+                    this.toggleBtn.style.background = '#4CAF50';
+                    this.enableEditing();
+                } else {
+                    this.toggleBtn.textContent = '✏️ Edit Slide Content';
+                    this.toggleBtn.style.background = '#ED1C24';
+                    this.disableEditing();
+                    this.saveContent();
+                }
+            }
+
+            enableEditing() {
+                // Target titles, descriptions, metrics, lists
+                const editables = document.querySelectorAll('.slide-title, .lead-text, .bullet-list li, .metric-val, .metric-label, .metric-sub, p, td, th');
+                editables.forEach(elem => {
+                    elem.setAttribute('contenteditable', 'true');
+                });
+            }
+
+            disableEditing() {
+                const editables = document.querySelectorAll('[contenteditable="true"]');
+                editables.forEach(elem => {
+                    elem.removeAttribute('contenteditable');
+                });
+            }
+
+            saveContent() {
+                const presentationData = document.getElementById('deckStage').innerHTML;
+                localStorage.setItem('taa_presentation_html', presentationData);
+            }
+
+            loadSavedContent() {
+                const saved = localStorage.getItem('taa_presentation_html');
+                if (saved) {
+                    document.getElementById('deckStage').innerHTML = saved;
+                }
+            }
+        }
+
+        // Initialize presentation and inline editing components
+        window.addEventListener('DOMContentLoaded', () => {
+            new SlidePresentation();
+            new InlineEditor();
+        });
+    </script>
+</body>
+</html>

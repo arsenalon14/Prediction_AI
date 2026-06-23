@@ -7,532 +7,799 @@
     <title>TAA Perishable Demand Forecaster — AI Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ===== DESIGN SYSTEM TOKENS ===== */
+        /* ===== DESIGN TOKENS ===== */
         :root {
-            --bg-primary: #0f172a;
-            --bg-panel: rgba(30, 41, 59, 0.7);
-            --accent-cobalt: #3b82f6;
-            --accent-indigo: #6366f1;
-            --accent-lavender: #a78bfa;
-            --accent-emerald: #10b981;
-            --accent-crimson: #ef4444;
-            --accent-amber: #f59e0b;
-            --text-primary: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-ghost: rgba(255, 255, 255, 0.1);
-            --border-active: rgba(255, 255, 255, 0.2);
-            --font-display: 'Outfit', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --radius-panel: 16px;
-            --radius-btn: 10px;
-            --shadow-glow: 0 4px 15px rgba(59, 130, 246, 0.4);
-            --shadow-panel: 0 10px 30px rgba(0, 0, 0, 0.2);
-            --transition-micro: 0.3s ease;
+            --bg-0: #120c0c;
+            --bg-1: #1a1213;
+            --panel: #201617;
+            --panel-2: #26191a;
+            --panel-soft: rgba(255,255,255,0.035);
+            --line: rgba(255,255,255,0.09);
+            --line-strong: rgba(255,255,255,0.16);
+
+            --red: #ED1C24;
+            --red-bright: #ff3b42;
+            --red-deep: #a8121a;
+            --gold: #E3AE45;
+            --gold-bright: #F4D078;
+            --gold-pale: #F6E2B0;
+
+            --up: #36c98a;
+            --down: #ff6b6b;
+            --warn: #E3AE45;
+
+            --text: #F6EFEA;
+            --text-2: #cdbfb9;
+            --text-muted: #9a8983;
+
+            --r-lg: 18px;
+            --r-md: 12px;
+            --r-sm: 8px;
+            --grad-sun: linear-gradient(90deg,#7a0f12 0%,#ED1C24 22%,#F2602A 48%,#E3AE45 76%,#F6E2B0 100%);
+            --shadow: 0 18px 40px -18px rgba(0,0,0,.7);
+            --ease: .28s cubic-bezier(.4,0,.2,1);
+
+            --red-rgb: 237,28,36;
+            --up-rgb: 54,201,138;
+            --gold-rgb: 227,174,69;
+            --down-rgb: 255,107,107;
         }
 
-        /* ===== RESET & BASE ===== */
+        /* ===== RESET ===== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { font-size: 16px; scroll-behavior: smooth; }
+        html { font-size: 100%; scroll-behavior: smooth; }
         body {
-            background-color: var(--bg-primary);
+            font-family: 'IBM Plex Sans', system-ui, sans-serif;
+            color: var(--text);
+            background: var(--bg-0);
             background-image:
-                radial-gradient(circle at 10% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
-                radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
-            background-attachment: fixed;
-            color: var(--text-primary);
-            font-family: var(--font-body);
+                radial-gradient(1100px 520px at 84% -8%, rgba(var(--red-rgb),.16), transparent 60%),
+                radial-gradient(900px 520px at 6% 8%, rgba(var(--gold-rgb),.10), transparent 55%);
             min-height: 100vh;
-            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
+        h1, h2, h3 { font-family: 'Poppins', sans-serif; }
+        ::selection { background: rgba(var(--red-rgb),.35); }
 
-        /* ===== SKIP LINK (Accessibility) ===== */
+        /* ===== SKIP LINK ===== */
         .skip-link {
-            position: absolute; top: -40px; left: 0;
-            background: var(--accent-cobalt); color: white;
-            padding: 0.5rem 1rem; z-index: 1000;
-            transition: top var(--transition-micro);
+            position: absolute; top: -50px; left: 8px;
+            background: var(--red); color: #fff;
+            padding: .5rem 1rem; border-radius: 6px; z-index: 1000;
+            transition: top var(--ease);
         }
-        .skip-link:focus { top: 0; }
+        .skip-link:focus { top: 8px; }
 
-        /* ===== APP LAYOUT ===== */
-        .app-container { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+        /* ===== BRAND STRIPE ===== */
+        .brand-stripe { height: 4px; background: var(--grad-sun); width: 100%; }
+
+        /* ===== APP SHELL ===== */
+        .app-container { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 4px); }
 
         /* ===== SIDEBAR ===== */
         .sidebar {
-            background: var(--bg-panel);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-right: 1px solid var(--border-ghost);
-            padding: 2rem 1.5rem;
+            background: linear-gradient(180deg, #1c1314 0%, #160f10 100%);
+            border-right: 1px solid var(--line);
+            padding: 1.6rem 1.25rem 1.25rem;
             display: flex; flex-direction: column;
             position: sticky; top: 0; height: 100vh; overflow-y: auto;
         }
+        .sidebar::-webkit-scrollbar { width: 8px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 8px; }
+        .sidebar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.08) transparent; }
+
         .sidebar-brand {
-            display: flex; align-items: center; gap: 0.75rem;
-            margin-bottom: 2rem; padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-ghost);
+            display: flex; align-items: center; gap: .8rem;
+            padding-bottom: 1.2rem; border-bottom: 1px solid var(--line);
         }
         .brand-logo {
-            width: 42px; height: 42px;
-            background: linear-gradient(135deg, var(--accent-cobalt) 0%, var(--accent-indigo) 100%);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 1.1rem; font-family: var(--font-display);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3); flex-shrink: 0;
+            width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(var(--red-rgb),.45);
+            overflow: hidden;
         }
         .brand-text h1 {
-            font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
-            text-wrap: balance;
-            background: linear-gradient(to right, #ffffff, #cbd5e1);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-size: 1.02rem; font-weight: 700; line-height: 1.15; letter-spacing: -.01em;
         }
-        .brand-text span {
-            font-size: 0.7rem; color: var(--accent-cobalt); font-weight: 600;
-            text-transform: uppercase; letter-spacing: 1.5px;
+        .brand-route {
+            display: flex; align-items: center; gap: .35rem;
+            font-size: .7rem; font-weight: 600; letter-spacing: .12em;
+            color: var(--gold); text-transform: uppercase; margin-top: .2rem;
         }
+        .brand-route svg { width: 11px; height: 11px; }
 
-        /* ===== MENU LIST ===== */
+
         .section-label {
-            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 1.5px; color: var(--text-muted);
-            margin-bottom: 1rem; margin-top: 0.5rem;
-        }
-        .menu-list { flex: 1; display: flex; flex-direction: column; gap: 0; }
-        .menu-item {
+            font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+            color: var(--text-muted); margin: 1.3rem 0 .65rem;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0.85rem 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 8px;
-            transition: background var(--transition-micro);
         }
-        .menu-item:hover { background: rgba(255, 255, 255, 0.03); }
-        .menu-info { flex: 1; min-width: 0; }
-        .menu-name {
-            font-weight: 500; font-size: 0.9rem;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .menu-meta {
-            font-size: 0.72rem; color: var(--text-muted);
-            margin-top: 0.15rem; font-variant-numeric: tabular-nums;
+        .count-pill {
+            background: rgba(var(--red-rgb),.16); color: #ff8086;
+            border: 1px solid rgba(var(--red-rgb),.3); border-radius: 20px;
+            padding: .05rem .5rem; font-size: .72rem; font-weight: 700;
         }
 
-        /* ===== TOGGLE SWITCH ===== */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; margin-left: 0.75rem; }
+        .menu-list { display: flex; flex-direction: column; gap: .2rem; }
+        .menu-item {
+            display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+            padding: .6rem .55rem; border-radius: var(--r-sm); transition: background var(--ease);
+        }
+        .menu-item:hover { background: rgba(255,255,255,.04); }
+        .menu-info { min-width: 0; flex: 1; }
+        .menu-name { font-size: .83rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .menu-meta { font-size: .7rem; color: var(--text-muted); margin-top: .1rem; }
+        .menu-meta b { color: var(--gold); font-weight: 600; }
+
+        .inactive-toggle:not([hidden]) {
+            display: flex; align-items: center; gap: .4rem; width: 100%;
+            background: none; border: none; cursor: pointer;
+            color: var(--text-muted); font-size: .72rem; font-weight: 700;
+            letter-spacing: .14em; text-transform: uppercase;
+            padding: .5rem .55rem; margin-top: .4rem;
+            border-top: 1px solid rgba(255,255,255,.06);
+            transition: color var(--ease); font-family: 'IBM Plex Sans', sans-serif;
+        }
+        .inactive-toggle:hover { color: var(--text); }
+        .inactive-toggle .chev { display: inline-block; transition: transform var(--ease); font-size: .7rem; }
+        .inactive-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+
+        /* ===== SWITCH ===== */
+        .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+        .switch::after {
+            content: "";
+            position: absolute;
+            top: -11px;
+            bottom: -11px;
+            left: -2px;
+            right: -2px;
+        }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .switch-slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255, 255, 255, 0.1); border-radius: 34px;
-            transition: background-color var(--transition-micro);
+        .switch .sl {
+            position: absolute; inset: 0; cursor: pointer;
+            background: rgba(255,255,255,.13); border-radius: 20px; transition: var(--ease);
         }
-        .switch-slider::before {
-            position: absolute; content: "";
-            height: 18px; width: 18px; left: 3px; bottom: 3px;
-            background-color: white; border-radius: 50%;
-            transition: transform var(--transition-micro);
+        .switch .sl::before {
+            content: ""; position: absolute;
+            height: 16px; width: 16px; left: 3px; bottom: 3px;
+            background: #fff; border-radius: 50%;
+            transition: var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,.4);
         }
-        .switch input:checked + .switch-slider { background-color: var(--accent-emerald); }
-        .switch input:checked + .switch-slider::before { transform: translateX(20px); }
-        .switch input:focus-visible + .switch-slider { outline: 2px solid var(--accent-cobalt); outline-offset: 2px; }
-
-        /* ===== BUTTONS ===== */
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-            width: 100%; padding: 0.75rem 1rem; border: none;
-            border-radius: var(--radius-btn); font-family: var(--font-body);
-            font-weight: 600; font-size: 0.9rem; cursor: pointer; text-align: center;
-            transition: transform var(--transition-micro), box-shadow var(--transition-micro), background var(--transition-micro);
-        }
-        .btn:focus-visible { outline: 2px solid var(--accent-cobalt); outline-offset: 2px; }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-cobalt), var(--accent-indigo));
-            color: white; font-size: 1rem; box-shadow: var(--shadow-glow);
-        }
-        .btn-primary:hover { box-shadow: 0 6px 25px rgba(59, 130, 246, 0.55); transform: scale(1.02); }
-        .btn-primary:active { transform: scale(0.98); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05); color: var(--text-primary);
-            border: 1px solid var(--border-ghost);
-        }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
-        .btn-sm { width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+        .switch input:checked + .sl { background: var(--red); }
+        .switch input:checked + .sl::before { transform: translateX(18px); }
+        .switch input:focus-visible + .sl { outline: 2px solid var(--gold); outline-offset: 2px; }
 
         /* ===== SIDEBAR FOOTER ===== */
         .sidebar-footer {
-            margin-top: auto; padding-top: 1.5rem;
-            border-top: 1px solid var(--border-ghost); text-align: center;
+            margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--line);
         }
-        .sidebar-footer p { font-size: 0.72rem; color: var(--text-muted); }
-        .active-count {
-            font-family: var(--font-display); font-size: 1.8rem; font-weight: 700;
-            background: linear-gradient(to right, var(--accent-cobalt), var(--accent-lavender));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        .sidebar-footer p { font-size: .72rem; color: var(--text-muted); text-align: center; margin-top: .75rem; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+            border: none; cursor: pointer;
+            font-family: 'Poppins', sans-serif; font-weight: 600;
+            border-radius: var(--r-sm); transition: var(--ease); font-size: .9rem;
+        }
+        .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+        .btn-primary {
+            background: var(--red); color: #fff;
+            padding: .8rem 1.1rem; width: 100%;
+            box-shadow: 0 8px 20px -8px rgba(var(--red-rgb),.8);
+        }
+        .btn-primary:hover {
+            background: var(--red-bright); transform: translateY(-1px);
+            box-shadow: 0 12px 26px -8px rgba(var(--red-rgb),.9);
+        }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled {
+            background: #3a2a2b; color: var(--text-muted);
+            box-shadow: none; cursor: not-allowed; transform: none;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,.05); color: var(--text);
+            border: 1px solid var(--line-strong); padding: .65rem 1rem; width: 100%;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,.1); border-color: var(--gold); }
+        .btn-sm { width: auto; padding: .5rem .9rem; font-size: .8rem; }
+        .btn-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: none; border: none; cursor: pointer; padding: .4rem;
+            color: var(--text-muted); border-radius: var(--r-sm);
+            transition: color var(--ease), background-color var(--ease);
+        }
+        .btn-icon:hover {
+            color: var(--gold);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .btn-icon:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 1px;
         }
 
-        /* ===== MAIN CONTENT ===== */
-        main { padding: 2rem 2.5rem; max-width: 1200px; }
+        /* ===== MAIN ===== */
+        main { padding: 1.9rem 2.4rem 3rem; max-width: 1280px; }
         .main-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1.5rem; padding-bottom: 1.25rem;
-            border-bottom: 1px solid var(--border-ghost);
+            display: flex; justify-content: space-between; align-items: flex-end;
+            gap: 1rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--line);
+            flex-wrap: wrap;
         }
-        .main-header h2 {
-            font-family: var(--font-display); font-size: 1.75rem; font-weight: 700;
-            text-wrap: balance;
-            background: linear-gradient(to right, #60a5fa, var(--accent-lavender));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .main-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+        .main-header h2 { font-size: 1.7rem; font-weight: 700; letter-spacing: -.02em; }
+        .main-header .sub { color: var(--text-2); font-size: .9rem; margin-top: .25rem; }
+        .main-header .sub b { color: var(--gold); font-weight: 600; }
         .status-pill {
-            background: var(--bg-panel); backdrop-filter: blur(12px);
-            border: 1px solid var(--border-ghost); padding: 0.5rem 1rem;
-            border-radius: 50px; font-size: 0.8rem; font-weight: 500;
-            display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;
+            display: flex; align-items: center; gap: .5rem;
+            background: var(--panel-soft); border: 1px solid var(--line);
+            padding: .5rem .9rem; border-radius: 30px;
+            font-size: .8rem; font-weight: 500; white-space: nowrap;
         }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--up); box-shadow: 0 0 10px var(--up); }
 
-        /* ===== TAB NAVIGATION ===== */
+        /* ===== TABS ===== */
         .tab-nav {
-            display: flex; gap: 0.25rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border-ghost);
+            display: flex; gap: .3rem;
+            margin: 1.4rem 0 1.6rem; border-bottom: 1px solid var(--line);
         }
         .tab-btn {
-            padding: 0.55rem 1.2rem;
-            border-radius: 8px 8px 0 0;
-            border: 1px solid transparent;
-            border-bottom: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-family: var(--font-body); font-size: 0.85rem; font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition-micro);
-            position: relative; bottom: -1px;
+            position: relative; background: none; border: none; cursor: pointer;
+            font-family: 'Poppins', sans-serif; font-size: .88rem; font-weight: 600;
+            color: var(--text-muted); padding: .7rem 1.05rem;
+            border-radius: var(--r-sm) var(--r-sm) 0 0; transition: var(--ease);
         }
-        .tab-btn:hover:not(.active) { color: var(--text-primary); background: rgba(255,255,255,0.04); }
-        .tab-btn.active {
-            background: #0f172a;
-            border-color: var(--border-ghost);
-            border-bottom-color: #0f172a;
-            color: var(--accent-cobalt); font-weight: 600;
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: #fff; }
+        .tab-btn.active::after {
+            content: ""; position: absolute;
+            left: .6rem; right: .6rem; bottom: -1px;
+            height: 3px; border-radius: 3px; background: var(--red);
         }
-        .tab-btn:focus-visible { outline: 2px solid var(--accent-cobalt); outline-offset: 2px; }
-        .tab-content { display: none; }
+        .tab-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+        .tab-content { display: none; animation: fade .35s ease; }
         .tab-content.active { display: block; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
         /* ===== PANELS ===== */
         .panel {
-            background: var(--bg-panel); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-ghost); border-radius: var(--radius-panel);
-            padding: 1.75rem; box-shadow: var(--shadow-panel);
-            transition: transform var(--transition-micro), box-shadow var(--transition-micro);
-            margin-bottom: 1.5rem;
+            background: var(--panel); border: 1px solid var(--line);
+            border-radius: var(--r-lg); padding: 1.5rem 1.6rem;
+            margin-bottom: 1.3rem; box-shadow: var(--shadow);
         }
-        .panel:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); }
-        .panel-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem; }
-        .panel-subtitle { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+        .panel-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .3rem; }
+        .panel-num {
+            font-family: 'Poppins', sans-serif; font-weight: 800; font-size: .85rem;
+            color: var(--red); background: rgba(var(--red-rgb),.13);
+            width: 26px; height: 26px; border-radius: 7px;
+            display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin: 0; }
+        .panel-subtitle { color: var(--text-muted); font-size: .82rem; margin-bottom: 1.3rem; line-height: 1.5; margin-top: .3rem; }
 
         /* ===== KPI ROW ===== */
-        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.3rem; }
         .kpi-card {
-            background: var(--bg-panel); backdrop-filter: blur(16px);
-            border: 1px solid var(--border-ghost); border-radius: var(--radius-panel);
-            padding: 1.25rem; position: relative; overflow: hidden;
-            transition: transform var(--transition-micro), border-color var(--transition-micro);
+            position: relative; background: var(--panel);
+            border: 1px solid var(--line); border-radius: var(--r-md);
+            padding: 1.1rem 1.15rem 1.1rem 1.3rem; overflow: hidden;
+            transition: var(--ease);
         }
-        .kpi-card:hover { transform: translateY(-3px); border-color: var(--border-active); }
-        .kpi-card::before {
-            content: ''; position: absolute; top: 0; left: 0;
-            width: 3px; height: 100%;
-            background: linear-gradient(to bottom, var(--accent-cobalt), var(--accent-indigo));
-        }
-        .kpi-card.emerald::before { background: linear-gradient(to bottom, var(--accent-emerald), var(--accent-cobalt)); }
-        .kpi-card.amber::before { background: linear-gradient(to bottom, var(--accent-amber), var(--accent-crimson)); }
-        .kpi-card.lavender::before { background: linear-gradient(to bottom, var(--accent-lavender), var(--accent-indigo)); }
-        .kpi-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .kpi-card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+        .kpi-card { border-top: 3px solid var(--red); }
+        .kpi-card.gold { border-top-color: var(--gold); }
+        .kpi-card.dim { border-top-color: var(--text-muted); }
+        .kpi-label { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .5rem; }
         .kpi-value {
-            font-family: var(--font-display); font-size: 1.6rem; font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            background: linear-gradient(to right, #fff, #e2e8f0);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-family: 'Poppins', sans-serif; font-size: 1.7rem; font-weight: 700;
+            line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums;
         }
+        .kpi-card.gold .kpi-value { color: var(--gold-bright); }
 
-        /* ===== UPLOAD ZONE ===== */
+        /* ===== UPLOAD ZONES ===== */
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-bottom: 1rem; }
+        .upload-zone-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .08em;
+            text-transform: uppercase; color: var(--text-muted); margin-bottom: .55rem;
+        }
         .upload-zone {
-            border: 2px dashed var(--accent-cobalt); border-radius: 12px;
-            padding: 2rem 1.5rem; text-align: center;
-            background: rgba(59, 130, 246, 0.04);
-            cursor: pointer;
-            transition: background var(--transition-micro), border-color var(--transition-micro);
-            margin-bottom: 1rem; position: relative;
+            border: 2px dashed rgba(var(--red-rgb),.5); border-radius: var(--r-md);
+            padding: 1.4rem 1rem; text-align: center;
+            background: rgba(var(--red-rgb),.04); cursor: pointer;
+            transition: var(--ease);
         }
-        .upload-zone:hover, .upload-zone.drag-over { background: rgba(59, 130, 246, 0.1); border-color: #60a5fa; }
-        .upload-zone.has-files { border-color: var(--accent-emerald); background: rgba(16, 185, 129, 0.06); }
-        .upload-icon { font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.85; }
-        .upload-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.4rem; }
-        .upload-hint { color: var(--text-muted); font-size: 0.82rem; }
-        .upload-highlight { color: var(--accent-cobalt); font-weight: 600; }
-        .file-chips { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap; }
+        .upload-zone:hover, .upload-zone.drag-over {
+            background: rgba(var(--red-rgb),.09); border-color: var(--red-bright);
+        }
+        .upload-zone.has-files {
+            border-color: rgba(var(--up-rgb),.55); background: rgba(var(--up-rgb),.06); border-style: solid;
+        }
+        .upload-icon { font-size: 1.7rem; margin-bottom: .6rem; }
+        .upload-title { font-weight: 600; font-size: .88rem; margin-bottom: .3rem; }
+        .upload-hint { color: var(--text-muted); font-size: .8rem; }
+        .upload-hint b { color: var(--red-bright); }
+        .file-chips { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-top: .8rem; }
         .file-chip {
-            background: rgba(16, 185, 129, 0.15); color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 0.25rem 0.75rem; border-radius: 50px;
-            font-size: 0.75rem; font-weight: 600;
+            background: rgba(var(--up-rgb),.14); color: #6fe3ab;
+            border: 1px solid rgba(var(--up-rgb),.3);
+            padding: .25rem .7rem; border-radius: 20px; font-size: .74rem; font-weight: 600;
         }
 
-        /* ===== UPLOAD META (flight date badge + alerts) ===== */
-        .upload-meta {
-            display: flex; flex-wrap: wrap; gap: 0.5rem;
-            align-items: center; margin-bottom: 1rem;
+        .upload-meta { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: 1rem; }
+        .tag {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .32rem .8rem; border-radius: 20px; font-size: .76rem; font-weight: 600;
         }
-        .flight-date-badge {
-            display: inline-flex; align-items: center; gap: 0.4rem;
-            padding: 0.3rem 0.9rem;
-            background: rgba(59, 130, 246, 0.12);
-            border: 1px solid rgba(59, 130, 246, 0.35);
-            border-radius: 20px; font-size: 0.78rem; font-weight: 600;
-            color: var(--accent-cobalt); font-variant-numeric: tabular-nums;
-        }
-        .pax-stat {
-            display: inline-flex; align-items: center; gap: 0.4rem;
-            padding: 0.3rem 0.85rem;
-            background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 20px; font-size: 0.78rem; font-weight: 600;
-            color: #34d399; font-variant-numeric: tabular-nums;
-        }
-        .pbm-stat {
-            display: inline-flex; align-items: center; gap: 0.4rem;
-            padding: 0.3rem 0.85rem;
-            background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25);
-            border-radius: 20px; font-size: 0.78rem; font-weight: 600;
-            color: var(--accent-amber); font-variant-numeric: tabular-nums;
-        }
+        .tag.date { background: rgba(var(--gold-rgb),.12); border: 1px solid rgba(var(--gold-rgb),.32); color: var(--gold-bright); }
+        .tag.pax  { background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--text-2); }
+        .tag.pbm  { background: rgba(var(--red-rgb),.1); border: 1px solid rgba(var(--red-rgb),.28); color: #ff8086; }
         .upload-alert {
-            width: 100%; padding: 0.6rem 0.9rem; border-radius: 8px;
-            font-size: 0.8rem; font-weight: 500;
-            display: flex; align-items: center; gap: 0.5rem;
+            width: 100%; padding: .6rem .85rem; border-radius: var(--r-sm);
+            font-size: .79rem; font-weight: 500; display: flex; align-items: center; gap: .5rem;
+            background: rgba(var(--gold-rgb),.1); border: 1px solid rgba(var(--gold-rgb),.3); color: var(--gold-bright);
         }
-        .upload-alert.warn {
-            background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);
-            color: var(--accent-amber);
+        .upload-alert.error {
+            background: rgba(var(--red-rgb),.1); border-color: rgba(var(--red-rgb),.3); color: #ff8e90;
         }
+        .inline-error-icon { flex-shrink: 0; font-style: normal; }
+
+        .nat-row { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin-top: 1rem; }
+        .nat-label { font-size: .75rem; color: var(--text-muted); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-right: .2rem; }
+        .nat-pill {
+            padding: .22rem .65rem; border-radius: 20px;
+            background: rgba(255,255,255,.05); border: 1px solid var(--line);
+            font-size: .76rem; font-weight: 500;
+        }
+        .nat-pill b { color: var(--gold); margin-left: .3rem; font-weight: 700; }
 
         /* ===== RESULTS TABLE ===== */
-        .table-wrap { overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; }
+        .table-wrap { overflow-x: auto; margin: 0 -.3rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 620px; }
         th {
-            padding: 0.9rem 1rem; text-align: left;
-            border-bottom: 1px solid var(--border-ghost);
-            color: var(--text-muted); font-size: 0.75rem; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+            padding: .8rem .85rem; text-align: left;
+            border-bottom: 1px solid var(--line-strong);
+            color: var(--text-muted); font-size: .75rem; font-weight: 700;
+            letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
         }
         td {
-            padding: 0.9rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            font-size: 0.88rem; font-variant-numeric: tabular-nums; white-space: nowrap;
+            padding: .8rem .85rem; border-bottom: 1px solid rgba(255,255,255,.05);
+            font-size: .86rem; font-variant-numeric: tabular-nums; white-space: nowrap;
+            vertical-align: middle;
         }
-        tr:hover td { background: rgba(255, 255, 255, 0.015); }
-        .q-value { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; }
-        .badge-up {
-            display: inline-flex; align-items: center; gap: 0.25rem;
-            padding: 0.2rem 0.6rem; border-radius: 50px;
-            font-size: 0.72rem; font-weight: 600;
-            background: rgba(16, 185, 129, 0.15); color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.25);
-        }
-        .badge-down {
-            display: inline-flex; align-items: center; gap: 0.25rem;
-            padding: 0.2rem 0.6rem; border-radius: 50px;
-            font-size: 0.72rem; font-weight: 600;
-            background: rgba(239, 68, 68, 0.15); color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.25);
-        }
-        .badge-neutral {
-            display: inline-flex; align-items: center; gap: 0.25rem;
-            padding: 0.2rem 0.6rem; border-radius: 50px;
-            font-size: 0.72rem; font-weight: 600;
-            background: rgba(148, 163, 184, 0.15); color: var(--text-muted);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-        }
-        /* ===== Q* MANUAL OVERRIDE INPUT ===== */
+        tbody tr { transition: background var(--ease); }
+        tbody tr:hover td { background: rgba(255,255,255,.022); }
+
+        .q-base { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 1rem; color: var(--text-2); }
         .q-override {
-            width: 66px; padding: 0.25rem 0.4rem;
-            background: rgba(255,255,255,0.06); border: 1px solid var(--border-ghost);
-            border-radius: 6px; color: var(--text-primary);
-            font-family: var(--font-display); font-size: 1rem; font-weight: 700; text-align: center;
-            transition: border-color var(--transition-micro), background var(--transition-micro);
+            width: 62px; padding: .28rem .35rem;
+            background: rgba(var(--gold-rgb),.08); border: 1px solid rgba(var(--gold-rgb),.3);
+            border-radius: 7px; color: var(--gold-bright);
+            font-family: 'Poppins', sans-serif; font-size: 1.02rem; font-weight: 800; text-align: center;
         }
-        .q-override:hover { border-color: var(--border-active); }
-        .q-override:focus { outline: none; border-color: var(--accent-cobalt); background: rgba(59,130,246,0.08); }
+        .q-override:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; border-color: var(--gold-bright); background: rgba(var(--gold-rgb),.16); }
 
-        /* ===== NATIONALITY PILLS ===== */
-        .nat-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.8rem; align-items: center; }
-        .nat-pill {
-            padding: 0.2rem 0.65rem; border-radius: 20px;
-            background: rgba(255,255,255,0.06); border: 1px solid var(--border-ghost);
-            font-size: 0.76rem; font-weight: 500; color: var(--text-primary);
+        .q-cell { display: inline-flex; align-items: center; gap: .3rem; }
+        .q-reset-btn {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-muted); font-size: .9rem;
+            padding: .2rem .28rem; border-radius: 4px;
+            transition: var(--ease); line-height: 1;
+            display: inline-flex; align-items: center; justify-content: center;
+            opacity: 0; flex-shrink: 0;
         }
-        .nat-pct { font-weight: 700; color: var(--accent-cobalt); margin-left: 0.3rem; }
+        .q-cell:hover .q-reset-btn,
+        .q-cell:focus-within .q-reset-btn { opacity: 1; }
+        .q-reset-btn:hover { color: var(--text); background: rgba(255,255,255,.08); }
+        .q-reset-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; opacity: 1; }
 
-        .theory-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+        .cr-bar { display: flex; align-items: center; gap: .5rem; }
+        .cr-track { width: 46px; height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+        .cr-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); border-radius: 4px; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: .2rem;
+            padding: .18rem .55rem; border-radius: 20px; font-size: .72rem; font-weight: 700;
+        }
+        .b-up   { background: rgba(var(--up-rgb),.15);  color: #56d79e; border: 1px solid rgba(var(--up-rgb),.28); }
+        .b-down { background: rgba(var(--down-rgb),.15); color: rgba(var(--down-rgb),1); border: 1px solid rgba(var(--down-rgb),.28); }
+        .b-flat { background: rgba(255,255,255,.06); color: var(--text-muted); border: 1px solid var(--line); }
+
+        .theory-tags { display: flex; flex-wrap: wrap; gap: .25rem; }
         .theory-tag {
-            font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
-            padding: 0.15rem 0.45rem; border-radius: 4px;
-            background: rgba(99, 102, 241, 0.15); color: var(--accent-lavender);
+            font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+            padding: .12rem .42rem; border-radius: 5px;
+            background: rgba(var(--red-rgb),.13); color: #ff9a9e; white-space: nowrap;
         }
-        .theory-tag.cold { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+        .theory-tag.gold { background: rgba(var(--gold-rgb),.14); color: var(--gold-bright); }
+        .gamma-tag {
+            font-size: .72rem; font-weight: 700; padding: .1rem .4rem;
+            border-radius: 5px; background: rgba(255,255,255,.06); color: var(--text-2);
+        }
+
+        /* ===== RESULTS TABLE: COLUMN ROLES ===== */
+        .col-product { width: 200px; font-weight: 600; }
+        .col-qstar   { width: 96px; }
+        .col-delta   { width: 70px; }
+        .col-baseline { width: 90px; }
+        .col-fstar   { width: 130px; }
+        .col-expand  { width: 36px; text-align: center; padding: .4rem .2rem; }
+
+        th.th-qstar { color: var(--gold-bright); }
+
+        /* Expand/collapse toggle in result rows */
+        .row-expand-btn {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-muted); padding: .3rem .4rem;
+            border-radius: 4px; transition: var(--ease);
+            font-family: inherit; font-size: .75rem; line-height: 1;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .row-expand-btn .chev { display: inline-block; transition: transform var(--ease); }
+        .row-expand-btn[aria-expanded="true"] .chev { transform: rotate(90deg); }
+        .row-expand-btn:hover { color: var(--text); background: rgba(255,255,255,.07); }
+        .row-expand-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+        /* Expandable detail row */
+        .detail-row > td { padding: 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+        .detail-inner {
+            padding: .85rem 1.2rem 1rem;
+            background: rgba(255,255,255,.015);
+            border-top: 1px solid rgba(255,255,255,.04);
+        }
+        .detail-grid { display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start; }
+        .detail-item { min-width: 110px; }
+        .detail-lbl {
+            font-size: .75rem; font-weight: 700; letter-spacing: .07em;
+            text-transform: uppercase; color: var(--text-muted);
+            display: block; margin-bottom: .22rem;
+        }
+        .detail-val {
+            font-family: 'Poppins', sans-serif; font-size: .92rem; font-weight: 600;
+            color: var(--text); font-variant-numeric: tabular-nums;
+        }
+        .detail-chip {
+            display: inline-flex; align-items: center; gap: .25rem;
+            font-size: .71rem; font-weight: 600; padding: .15rem .55rem;
+            background: rgba(255,255,255,.055); border: 1px solid var(--line);
+            border-radius: 20px; color: var(--text-2);
+        }
 
         /* ===== EMPTY STATE ===== */
-        .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
-        .empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
-        .empty-state p { font-size: 0.9rem; }
+        .empty-state { text-align: center; padding: 2.6rem 1rem; color: var(--text-muted); }
+        .empty-state .icon { font-size: 2.2rem; opacity: .5; margin-bottom: .8rem; }
+        .empty-state p { font-size: .86rem; line-height: 1.6; }
 
         /* ===== MODAL ===== */
         .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
-            z-index: 500; align-items: center; justify-content: center;
+            display: none; position: fixed; inset: 0;
+            background: rgba(8,5,5,.66); backdrop-filter: blur(5px);
+            z-index: 500; align-items: center; justify-content: center; padding: 1rem;
         }
-        .modal-overlay.active { display: flex; }
+        .modal-overlay.active { display: flex; animation: fade .25s ease; }
         .modal {
-            background: #1e293b; border: 1px solid var(--border-ghost);
-            border-radius: 20px; padding: 2rem; width: 440px; max-width: 90vw;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            background: var(--panel-2); border: 1px solid var(--line-strong);
+            border-radius: var(--r-lg); padding: 1.7rem; width: 460px; max-width: 100%;
+            box-shadow: 0 30px 60px rgba(0,0,0,.6);
         }
-        .modal h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; }
-        .form-group { margin-bottom: 1rem; }
+        .modal h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.2rem; }
+        .form-group { margin-bottom: .95rem; }
         .form-group label {
-            display: block; font-size: 0.8rem; font-weight: 600;
-            color: var(--text-muted); margin-bottom: 0.4rem;
-            text-transform: uppercase; letter-spacing: 0.5px;
+            display: block; font-size: .7rem; font-weight: 700;
+            letter-spacing: .06em; text-transform: uppercase;
+            color: var(--text-muted); margin-bottom: .4rem;
         }
         .form-input {
-            width: 100%; padding: 0.7rem 0.9rem;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-ghost);
-            border-radius: 8px; color: var(--text-primary);
-            font-family: var(--font-body); font-size: 0.9rem;
-            transition: border-color var(--transition-micro);
+            width: 100%; padding: .65rem .8rem;
+            background: rgba(255,255,255,.05); border: 1px solid var(--line);
+            border-radius: var(--r-sm); color: var(--text);
+            font-family: 'IBM Plex Sans', sans-serif; font-size: .9rem; transition: var(--ease);
         }
-        .form-input:focus { outline: none; border-color: var(--accent-cobalt); }
-        .form-input::placeholder { color: rgba(148, 163, 184, 0.5); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+        .form-input:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; border-color: var(--red); }
+        @media (forced-colors: active) {
+            .form-input:focus-visible { outline: 2px solid ButtonText; }
+        }
+        .form-input::placeholder { color: rgba(154,137,131,.85); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+        .modal-actions { display: flex; gap: .7rem; margin-top: 1.4rem; }
         .modal-actions .btn { flex: 1; }
 
-        /* ===== LOADING SPINNER ===== */
+        /* ===== SPINNER ===== */
         .spinner {
-            display: inline-block; width: 18px; height: 18px;
-            border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
-            border-radius: 50%; animation: spin 0.6s linear infinite;
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+            border-radius: 50%; animation: sp .6s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes sp { to { transform: rotate(360deg); } }
 
-        /* ===== POST-FLIGHT ACTUALS TAB ===== */
-        .actuals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+        /* ===== POST-FLIGHT ACTUALS ===== */
+        .actuals-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.1rem; margin-bottom: 1.3rem; }
         .actuals-upload-label {
-            font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.6rem;
+            font-size: .75rem; font-weight: 700; letter-spacing: .08em;
+            text-transform: uppercase; color: var(--text-muted); margin-bottom: .55rem;
         }
-        .actuals-chip { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.6rem; flex-wrap: wrap; }
         .actuals-result {
-            margin-top: 1.5rem; padding: 1.25rem;
-            background: rgba(16, 185, 129, 0.07); border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 12px;
+            margin-top: 1.4rem; padding: 1.25rem;
+            background: rgba(var(--up-rgb),.06); border: 1px solid rgba(var(--up-rgb),.25);
+            border-radius: var(--r-md);
         }
-        .actuals-result-title { font-weight: 600; color: #34d399; margin-bottom: 0.75rem; font-size: 0.9rem; }
-        .bayesian-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-        .bayesian-table th { font-size: 0.7rem; letter-spacing: 0.5px; }
-        .bayesian-table td { font-size: 0.82rem; padding: 0.6rem 1rem; }
+        .actuals-result-title { font-weight: 600; color: #6fe3ab; margin-bottom: .9rem; font-size: .9rem; }
 
-        /* ===== DAILY SALES MONITOR TAB ===== */
-        .monitor-summary {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 1rem; margin-bottom: 1.5rem;
-        }
+        /* ===== DAILY MONITOR ===== */
+        .monitor-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.3rem; }
         .monitor-stat {
-            background: var(--bg-panel); border: 1px solid var(--border-ghost);
-            border-radius: 12px; padding: 1rem 1.25rem; text-align: center;
+            background: var(--panel); border: 1px solid var(--line);
+            border-radius: var(--r-md); padding: 1.05rem 1.2rem;
         }
         .monitor-stat-label {
-            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 0.4rem;
+            font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+            text-transform: uppercase; color: var(--text-muted); margin-bottom: .4rem;
         }
         .monitor-stat-value {
-            font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+            font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 700;
             font-variant-numeric: tabular-nums;
-            background: linear-gradient(to right, var(--accent-cobalt), var(--accent-lavender));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
+        .monitor-stat.gold .monitor-stat-value { color: var(--gold-bright); }
+
         .day-card {
-            background: var(--bg-panel); border: 1px solid var(--border-ghost);
-            border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
-            transition: transform var(--transition-micro), box-shadow var(--transition-micro);
+            background: var(--panel); border: 1px solid var(--line);
+            border-radius: var(--r-md); padding: 1.15rem 1.4rem; margin-bottom: .9rem;
         }
-        .day-card:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
         .day-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-ghost);
+            margin-bottom: 1rem; padding-bottom: .7rem; border-bottom: 1px solid var(--line);
+            flex-wrap: wrap; gap: .5rem;
         }
-        .day-date { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
-        .day-totals { display: flex; gap: 0.75rem; }
-        .day-total-pill {
-            font-size: 0.78rem; font-weight: 600; font-variant-numeric: tabular-nums;
-            padding: 0.25rem 0.75rem; border-radius: 20px;
-            background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.25);
-            color: #93c5fd;
-        }
-        .day-total-pill.rev {
-            background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25); color: #6ee7b7;
-        }
-        .bar-row {
-            display: grid; grid-template-columns: 170px 1fr 56px;
-            align-items: center; gap: 0.75rem; margin-bottom: 0.45rem;
-        }
-        .bar-label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bar-track { height: 7px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
-        .bar-fill {
-            height: 100%; border-radius: 4px;
-            background: linear-gradient(to right, var(--accent-cobalt), var(--accent-lavender));
-            transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .bar-val { font-size: 0.78rem; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+        .day-date { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1rem; }
+        .day-totals { display: flex; gap: .6rem; }
+        .day-total-pill { font-size: .76rem; font-weight: 700; padding: .25rem .75rem; border-radius: 20px; font-variant-numeric: tabular-nums; }
+        .day-total-pill.units { background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--text-2); }
+        .day-total-pill.rev   { background: rgba(var(--gold-rgb),.1); border: 1px solid rgba(var(--gold-rgb),.28); color: var(--gold-bright); }
 
-        /* ===== REDUCED MOTION ===== */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+        .bar-row { display: grid; grid-template-columns: 200px 1fr 50px; align-items: center; gap: .8rem; margin-bottom: .5rem; }
+        .bar-label { font-size: .78rem; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bar-track { height: 8px; background: rgba(255,255,255,.06); border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--red), var(--gold)); transform: scaleX(0); transform-origin: left; transition: transform .8s cubic-bezier(.4,0,.2,1); will-change: transform; }
+        .bar-val { font-size: .78rem; font-weight: 700; text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+
+        /* ===== TABLE SCROLL HINT ===== */
+        .tw-outer { position: relative; }
+        .tw-outer::after {
+            content: ''; position: absolute;
+            top: 0; right: 0; bottom: 0; width: 3rem;
+            background: linear-gradient(to right, transparent, var(--panel));
+            pointer-events: none; z-index: 1;
         }
+
+        /* ===== MODAL CLOSE BUTTON ===== */
+        .modal { position: relative; }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem;
+            background: none; border: none; cursor: pointer;
+            color: var(--text-muted); font-size: 1.1rem; line-height: 1;
+            padding: .3rem .45rem; border-radius: 4px;
+            transition: var(--ease); font-family: inherit;
+        }
+        .modal-close:hover { color: var(--text); background: rgba(255,255,255,.06); }
+        .modal-close:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+        /* ===== SKELETON LOADER ===== */
+        .menu-skeleton {
+            height: 44px; border-radius: var(--r-sm); margin-bottom: .3rem;
+            background: linear-gradient(90deg,
+                rgba(255,255,255,.04) 25%,
+                rgba(255,255,255,.08) 50%,
+                rgba(255,255,255,.04) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ===== TOOLTIPS ===== */
+        .tooltip-help {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+            color: var(--text-2);
+            font-size: 0.68rem;
+            font-weight: 700;
+            cursor: help;
+            margin-left: 5px;
+            vertical-align: middle;
+            transition: var(--ease);
+        }
+        .tooltip-help:hover {
+            background: var(--gold);
+            color: var(--bg-0);
+        }
+        .tooltip-help::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: var(--panel-2);
+            color: var(--text);
+            border: 1px solid var(--line-strong);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--r-sm);
+            font-size: 0.76rem;
+            font-weight: 500;
+            line-height: 1.4;
+            white-space: normal;
+            width: 240px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s cubic-bezier(.4,0,.2,1), transform 0.18s cubic-bezier(.4,0,.2,1);
+            z-index: 100;
+            text-align: left;
+            text-transform: none;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        .tooltip-help:hover::after,
+        .tooltip-help:focus-visible::after {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+        .tooltip-help:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+        th .tooltip-help::after {
+            bottom: auto;
+            top: 125%;
+        }
+
+
+        .bar-details {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 0.1rem;
+            margin-bottom: 0.6rem;
+            padding-left: 208px; /* 200px label width + 8px gap */
+        }
+        @media (max-width: 640px) {
+            .bar-details {
+                padding-left: 0;
+                margin-top: 0.2rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1100px) {
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 980px) {
+            .app-container { grid-template-columns: 1fr; }
+            .sidebar { position: static; height: auto; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+            .actuals-grid { grid-template-columns: 1fr 1fr; }
+            .actuals-grid > div:last-child { grid-column: 1 / -1; }
+            main { padding: 1.4rem 1.2rem 3rem; }
+        }
+        @media (max-width: 640px) {
+            .actuals-grid { grid-template-columns: 1fr; }
+            .actuals-grid > div:last-child { grid-column: auto; }
+            .upload-grid { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: 1fr 1fr; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+        }
+
+        /* ===== SCREEN-READER ONLY ===== */
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+        /* ===== FORECAST TIMESTAMP ===== */
+        .forecast-timestamp { font-size: .75rem; color: var(--text-muted); margin-top: -.6rem; margin-bottom: 1.3rem; }
+
+        /* ===== KBD BADGES IN BUTTONS ===== */
+        kbd {
+            font-family: 'IBM Plex Sans', monospace; font-size: .7rem; font-weight: 600;
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+            border-radius: 4px; padding: .1rem .35rem; color: var(--text-2);
+            vertical-align: middle; margin-left: .4rem; letter-spacing: 0;
+            pointer-events: none;
+        }
+        .btn:disabled kbd { opacity: .4; }
+
+        /* ===== UNDO TOAST ===== */
+        .undo-toast {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(140%);
+            background: var(--panel-2); border: 1px solid var(--line-strong);
+            border-radius: var(--r-md); padding: .65rem 1rem;
+            display: flex; align-items: center; gap: .75rem;
+            font-size: .84rem; color: var(--text);
+            box-shadow: 0 8px 24px rgba(0,0,0,.55);
+            z-index: 900; transition: transform .25s cubic-bezier(.4,0,.2,1);
+            white-space: nowrap; min-width: 280px;
+        }
+        .undo-toast.visible { transform: translateX(-50%) translateY(0); }
+        .undo-toast span { flex: 1; }
+        .undo-toast .undo-btn {
+            background: rgba(var(--gold-rgb),.15); border: 1px solid rgba(var(--gold-rgb),.4);
+            color: var(--gold-bright); border-radius: var(--r-sm);
+            padding: .28rem .7rem; font-size: .8rem; font-weight: 700;
+            cursor: pointer; font-family: 'IBM Plex Sans', sans-serif; transition: var(--ease);
+        }
+        .undo-toast .undo-btn:hover { background: rgba(var(--gold-rgb),.28); }
+        .undo-toast .undo-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     </style>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="brand-stripe"></div>
 
     <div class="app-container">
         <!-- ===== SIDEBAR ===== -->
         <aside class="sidebar" role="complementary" aria-label="Menu Management">
             <div class="sidebar-brand">
-                <div class="brand-logo" aria-hidden="true">Q*</div>
+                <div class="brand-logo" aria-hidden="true">
+                    <svg width="46" height="46" viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%"   stop-color="#7a0f12"/>
+                                <stop offset="35%"  stop-color="#ED1C24"/>
+                                <stop offset="100%" stop-color="#E3AE45"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="46" height="46" rx="12" fill="url(#logo-grad)"/>
+                        <text x="23" y="31" text-anchor="middle"
+                              font-family="'Poppins',Arial Black,sans-serif"
+                              font-weight="900" font-size="17" fill="white">AA</text>
+                    </svg>
+                </div>
                 <div class="brand-text">
                     <h1>Demand Forecaster</h1>
-                    <span>DMK ↔ MLE Perishable AI</span>
+                    <div class="brand-route">
+                        DMK
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        MLE
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+                        DMK
+                    </div>
                 </div>
             </div>
 
-            <div class="section-label">Active Perishable Menu</div>
+
+            <div class="section-label">
+                Active Perishable Menu
+                <span class="count-pill" id="active-count" aria-live="polite">0</span>
+            </div>
+
             <div class="menu-list" id="menu-list" role="list" aria-label="Perishable menu items">
-                <div class="empty-state" id="menu-loading">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 0.75rem;">Loading menu…</p>
+                <div id="menu-loading">
+                    <div class="menu-skeleton"></div>
+                    <div class="menu-skeleton"></div>
+                    <div class="menu-skeleton" style="width:80%"></div>
+                    <div class="menu-skeleton" style="width:65%"></div>
                 </div>
             </div>
 
-            <button class="btn btn-secondary" id="btn-add-item" aria-label="Add new seasonal menu item" style="margin-top: 1rem;">
-                + Add New Seasonal Item
+            <button class="inactive-toggle" id="inactive-toggle" aria-expanded="false" hidden>
+                <span class="chev" aria-hidden="true">▸</span>
+                <span id="inactive-toggle-label">Inactive items</span>
             </button>
+            <div class="menu-list" id="inactive-list" role="list" hidden></div>
 
             <div class="sidebar-footer">
-                <div class="active-count" id="active-count" aria-live="polite">0</div>
-                <p>Active Items</p>
-                <p style="margin-top: 0.75rem;">Thai AirAsia © 2026</p>
+                <button class="btn btn-secondary" id="btn-add-item" aria-label="Add new seasonal menu item">
+                    + Add New Seasonal Item
+                </button>
+                <p>Thai AirAsia · Operations Intelligence<br>© 2026 · Internal Use</p>
             </div>
         </aside>
 
@@ -541,7 +808,7 @@
             <header class="main-header">
                 <div>
                     <h2>AI Optimal Loading Engine</h2>
-                    <p>7-Theory Operations Research Pipeline</p>
+                    <p class="sub">7-theory operations-research pipeline · <b>Tobit MLE<span class="tooltip-help" data-tip="Tobit Maximum Likelihood Estimation: Recovers true latent passenger demand by mathematically adjusting for stockout censorship.">?</span> → Newsvendor Q*<span class="tooltip-help" data-tip="Newsvendor Optimal Stocking: The profit-maximizing quantity to load, balancing the costs of overage (waste) and underage (lost sales).">?</span></b></p>
                 </div>
                 <div class="status-pill">
                     <span class="status-dot" id="status-dot"></span>
@@ -549,115 +816,137 @@
                 </div>
             </header>
 
-            <!-- TAB NAVIGATION -->
             <nav class="tab-nav" role="tablist" aria-label="Main sections">
                 <button class="tab-btn active" id="tab-btn-forecast" role="tab"
                         aria-selected="true" aria-controls="tab-forecast"
                         onclick="switchTab('forecast')">Forecast</button>
                 <button class="tab-btn" id="tab-btn-actuals" role="tab"
-                        aria-selected="false" aria-controls="tab-actuals"
+                        aria-selected="false" aria-controls="tab-actuals" tabindex="-1"
                         onclick="switchTab('actuals')">Post-Flight Actuals</button>
                 <button class="tab-btn" id="tab-btn-monitor" role="tab"
-                        aria-selected="false" aria-controls="tab-monitor"
+                        aria-selected="false" aria-controls="tab-monitor" tabindex="-1"
                         onclick="switchTab('monitor')">Daily Sales Monitor</button>
             </nav>
 
             <!-- ══ TAB: FORECAST ══ -->
             <div class="tab-content active" id="tab-forecast" role="tabpanel" aria-labelledby="tab-btn-forecast">
 
-                <!-- KPI Row -->
                 <section class="kpi-row" aria-label="Key Performance Indicators">
                     <div class="kpi-card">
                         <div class="kpi-label">Total Passengers</div>
-                        <div class="kpi-value" id="kpi-pax">—</div>
+                        <div class="kpi-value" id="kpi-pax" aria-live="polite">—</div>
                     </div>
-                    <div class="kpi-card emerald">
+                    <div class="kpi-card gold">
                         <div class="kpi-label">Net BoB Market</div>
-                        <div class="kpi-value" id="kpi-bob">—</div>
+                        <div class="kpi-value" id="kpi-bob" aria-live="polite">—</div>
                     </div>
-                    <div class="kpi-card amber">
+                    <div class="kpi-card dim">
                         <div class="kpi-label">PBM Pre-Booked</div>
-                        <div class="kpi-value" id="kpi-pbm">—</div>
+                        <div class="kpi-value" id="kpi-pbm" aria-live="polite">—</div>
                     </div>
-                    <div class="kpi-card lavender">
+                    <div class="kpi-card dim">
                         <div class="kpi-label">Forecast Date</div>
-                        <div class="kpi-value" id="kpi-date" style="font-size: 1rem; word-break: break-all;">—</div>
+                        <div class="kpi-value" id="kpi-date" style="font-size:1.25rem" aria-live="polite">—</div>
                     </div>
                 </section>
 
-                <!-- Upload Zone -->
                 <section class="panel" id="upload-panel">
-                    <div class="panel-title">1. Flight Demographic Data</div>
-                    <div class="panel-subtitle">
-                        Upload the upcoming flight's passenger manifest and PBM CSVs.
-                        FlightDate is auto-detected from the first column of the passenger file.
+                    <div class="panel-head">
+                        <span class="panel-num">1</span>
+                        <h3 class="panel-title">Flight Demographic Data</h3>
                     </div>
-                    <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
-                         aria-label="Upload CSV files by clicking or dragging">
-                        <div class="upload-icon" aria-hidden="true">📂</div>
-                        <div class="upload-title">Drag &amp; drop CSV files here, or click to browse</div>
-                        <div class="upload-hint">
-                            Accepts: <span class="upload-highlight">Passenger_Nat_Age_Seat.csv</span>
-                            and <span class="upload-highlight">PBM-DATA.csv</span>
+                    <p class="panel-subtitle">Upload the upcoming flight's passenger manifest and PBM bookings as separate files. FlightDate is auto-detected from the passenger file.</p>
+
+                    <div class="upload-grid">
+                        <div>
+                            <div class="upload-zone-label">Passenger Manifest CSV</div>
+                            <div class="upload-zone" id="uz-pax" role="button" tabindex="0"
+                                 aria-label="Upload passenger manifest CSV">
+                                <div class="upload-icon" aria-hidden="true">👥</div>
+                                <div class="upload-title">Drop passenger CSV</div>
+                                <div class="upload-hint">format: <b>Passenger_Nat_Age_Seat.csv</b></div>
+                                <div class="file-chips" id="chip-pax"></div>
+                                <input type="file" id="in-pax" accept=".csv" hidden aria-hidden="true">
+                            </div>
                         </div>
-                        <div class="file-chips" id="file-chips"></div>
-                        <input type="file" id="file-input" multiple accept=".csv"
-                               style="display: none;" aria-hidden="true">
+                        <div>
+                            <div class="upload-zone-label">PBM Bookings CSV</div>
+                            <div class="upload-zone" id="uz-pbm" role="button" tabindex="0"
+                                 aria-label="Upload PBM bookings CSV">
+                                <div class="upload-icon" aria-hidden="true">🍱</div>
+                                <div class="upload-title">Drop PBM CSV</div>
+                                <div class="upload-hint">format: <b>PBM-DATA.csv</b></div>
+                                <div class="file-chips" id="chip-pbm"></div>
+                                <input type="file" id="in-pbm" accept=".csv" hidden aria-hidden="true">
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Flight date badge + pax/pbm counts + duplicate warnings -->
-                    <div class="upload-meta" id="upload-meta" style="display: none;">
-                        <span class="flight-date-badge" id="upload-date-badge">📅 —</span>
-                        <span class="pax-stat" id="upload-pax-stat">👥 — pax</span>
-                        <span class="pbm-stat" id="upload-pbm-stat">🍱 — PBM</span>
-                        <div class="upload-alert warn" id="upload-dup-warn" style="display: none;">
-                            ⚠ Passenger file for this date was already uploaded — overwriting with new data.
+                    <div class="upload-meta" id="upload-meta" style="display:none">
+                        <span class="tag date" id="upload-date-badge">📅 N/A</span>
+                        <span class="tag pax"  id="upload-pax-stat">👥 N/A pax</span>
+                        <span class="tag pbm"  id="upload-pbm-stat">🍱 N/A PBM</span>
+                        <div class="upload-alert" id="upload-dup-warn" style="display:none">
+                            ⚠ Manifest for this date was already uploaded, overwriting with new data.
                         </div>
-                        <div class="upload-alert warn" id="upload-pbm-dup-warn" style="display: none;">
-                            ⚠ PBM file for this date was already uploaded — overwriting with new data.
+                        <div class="upload-alert" id="upload-pbm-dup-warn" style="display:none">
+                            ⚠ PBM file for this date was already uploaded, overwriting with new data.
                         </div>
                     </div>
 
-                    <!-- Nationality breakdown pills (populated after upload) -->
-                    <div class="nat-row" id="nat-row" style="display:none;" aria-live="polite"></div>
+                    <div class="nat-row" id="nat-row" style="display:none" aria-live="polite"></div>
 
-                    <button class="btn btn-primary" id="btn-forecast" aria-label="Run the AI forecast engine"
-                            disabled title="Upload passenger manifest and PBM file first">
-                        Run Hyper-Personalized Forecast 🚀
-                    </button>
+                    <div id="upload-error" hidden aria-live="assertive"></div>
+
+                    <div style="margin-top:1.2rem; display: flex; gap: .75rem;">
+                        <button class="btn btn-primary" id="btn-forecast"
+                                disabled title="Upload passenger manifest first" style="flex: 1;">
+                            Run Q* Forecast →<kbd>⌃↵</kbd>
+                        </button>
+                        <button class="btn btn-secondary" id="btn-clear-forecast" style="width: auto; flex-shrink: 0;" aria-label="Clear forecast data">
+                            Clear
+                        </button>
+                    </div>
                 </section>
 
-                <!-- Results Table -->
                 <section class="panel" id="results-panel">
-                    <div class="panel-title">2. Optimal Loading Recommendations (Q*)</div>
-                    <div class="panel-subtitle">Newsvendor-optimized stocking quantities for active perishable items</div>
+                    <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: .6rem;">
+                            <span class="panel-num">2</span>
+                            <h3 class="panel-title">Optimal Loading Recommendations (Q*)</h3>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btn-export-csv" style="display: none;" aria-label="Export recommendations to CSV">
+                            📥 Export CSV
+                        </button>
+                    </div>
+                    <p class="panel-subtitle">Newsvendor-optimized stocking quantities per active item. The <b style="color:var(--gold-bright)">Adjusted Q*</b> column is editable; your manual override is the operator safety valve.</p>
+                    <p class="forecast-timestamp" id="forecast-timestamp" hidden></p>
+                    <div id="results-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+                    <div class="tw-outer">
                     <div class="table-wrap">
                         <table id="results-table" aria-label="Forecast results">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Price</th>
-                                    <th>Cost</th>
-                                    <th>Critical Ratio</th>
-                                    <th>Stockout %</th>
-                                    <th>True Demand (μ)</th>
-                                    <th>Baseline Q*</th>
-                                    <th>Adjusted Q*</th>
-                                    <th>Δ</th>
-                                    <th>Theories</th>
+                                    <th scope="col">Product</th>
+                                    <th scope="col" class="th-qstar">Adjusted Q*<span class="tooltip-help" data-tip="The final loading quantity adjusted for this flight's specific passenger nationalities and PBM reservations. Fully editable.">?</span></th>
+                                    <th scope="col">Δ<span class="tooltip-help" data-tip="Change from the Baseline Q*: positive (+) means this flight's passenger demographics push demand above the historical average; negative (−) means below.">?</span></th>
+                                    <th scope="col">Baseline Q*<span class="tooltip-help" data-tip="The default Newsvendor-optimized loading quantity based on historical average monthly demand patterns.">?</span></th>
+                                    <th scope="col">Service Level (F*)<span class="tooltip-help" data-tip="Critical Fractile: The target probability of fully satisfying in-flight demand based on the item's financial profit margins.">?</span></th>
+                                    <th scope="col" class="col-expand" aria-label="Details"></th>
                                 </tr>
                             </thead>
                             <tbody id="results-body">
                                 <tr>
-                                    <td colspan="10">
+                                    <td colspan="6">
                                         <div class="empty-state">
                                             <div class="icon" aria-hidden="true">🧮</div>
-                                            <p>Click "Run Forecast" to generate optimal loading recommendations</p>
+                                            <p>Upload a manifest and run the forecast to generate optimal loading recommendations.</p>
                                         </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
                     </div>
                 </section>
             </div>
@@ -665,59 +954,72 @@
             <!-- ══ TAB: POST-FLIGHT ACTUALS ══ -->
             <div class="tab-content" id="tab-actuals" role="tabpanel" aria-labelledby="tab-btn-actuals">
                 <section class="panel">
-                    <div class="panel-title">Post-Flight Actuals Upload</div>
-                    <div class="panel-subtitle">
-                        After the flight lands, upload the actual sales and wastage CSVs (same format as
-                        SaleALL and Wastage files). Data is appended to the historical dataset and the
-                        Tobit model re-runs — this is the Theory 7 MLE Refit.
-                    </div>
+                    <div class="panel-head"><h3 class="panel-title">Post-Flight Actuals Upload</h3></div>
+                    <p class="panel-subtitle">After the flight lands, upload actual sales, wastage, and the <b>final boarded passenger manifest</b>. All three are required: the passenger file provides the demand rate denominator for the Theory 7 MLE Refit.</p>
 
                     <div class="actuals-grid">
                         <div>
                             <div class="actuals-upload-label">Actual Sales CSV</div>
                             <div class="upload-zone" id="actuals-sales-zone" role="button" tabindex="0"
-                                 aria-label="Upload actual sales CSV" style="padding: 1.5rem 1rem; margin-bottom: 0;">
+                                 aria-label="Upload actual sales CSV" style="padding:1.4rem 1rem;margin-bottom:0">
                                 <div class="upload-icon" aria-hidden="true">📊</div>
-                                <div class="upload-title" style="font-size: 0.9rem;">Drop SaleALL CSV here</div>
+                                <div class="upload-title" style="font-size:.88rem">Drop SaleALL CSV here</div>
                                 <div class="upload-hint">Same format as SaleALL2026_Month*.csv</div>
-                                <div class="actuals-chip" id="actuals-sales-chip"></div>
-                                <input type="file" id="actuals-sales-input" accept=".csv"
-                                       style="display: none;" aria-hidden="true">
+                                <div class="file-chips" id="actuals-sales-chip"></div>
+                                <input type="file" id="actuals-sales-input" accept=".csv" hidden aria-hidden="true">
                             </div>
                         </div>
                         <div>
                             <div class="actuals-upload-label">Actual Wastage CSV</div>
                             <div class="upload-zone" id="actuals-wastage-zone" role="button" tabindex="0"
-                                 aria-label="Upload actual wastage CSV" style="padding: 1.5rem 1rem; margin-bottom: 0;">
+                                 aria-label="Upload actual wastage CSV" style="padding:1.4rem 1rem;margin-bottom:0">
                                 <div class="upload-icon" aria-hidden="true">♻️</div>
-                                <div class="upload-title" style="font-size: 0.9rem;">Drop Wastage CSV here</div>
+                                <div class="upload-title" style="font-size:.88rem">Drop Wastage CSV here</div>
                                 <div class="upload-hint">Same format as Wastage-2026_Month*.csv</div>
-                                <div class="actuals-chip" id="actuals-wastage-chip"></div>
-                                <input type="file" id="actuals-wastage-input" accept=".csv"
-                                       style="display: none;" aria-hidden="true">
+                                <div class="file-chips" id="actuals-wastage-chip"></div>
+                                <input type="file" id="actuals-wastage-input" accept=".csv" hidden aria-hidden="true">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="actuals-upload-label">Actual Boarded Passengers CSV <span style="color:var(--red);font-size:.72rem">Required</span></div>
+                            <div class="upload-zone" id="actuals-pax-zone" role="button" tabindex="0"
+                                 aria-label="Upload actual boarded passenger manifest CSV" style="padding:1.4rem 1rem;margin-bottom:0">
+                                <div class="upload-icon" aria-hidden="true">🛫</div>
+                                <div class="upload-title" style="font-size:.88rem">Drop Passenger CSV here</div>
+                                <div class="upload-hint">PSS export after flight (same format as pre-flight manifest)</div>
+                                <div class="file-chips" id="actuals-pax-chip"></div>
+                                <input type="file" id="actuals-pax-input" accept=".csv" hidden aria-hidden="true">
                             </div>
                         </div>
                     </div>
 
-                    <button class="btn btn-primary" id="btn-submit-actuals"
-                            aria-label="Submit post-flight actuals and update model">
-                        Submit Actuals &amp; Update Model →
-                    </button>
+                    <div id="actuals-error" hidden aria-live="assertive"></div>
 
-                    <div class="actuals-result" id="actuals-result" style="display: none;">
+                    <div style="margin-top:1.2rem; display: flex; gap: .75rem;">
+                        <button class="btn btn-primary" id="btn-submit-actuals" style="flex: 1;">
+                            Submit Actuals &amp; Refit Model →<kbd>⌃↵</kbd>
+                        </button>
+                        <button class="btn btn-secondary" id="btn-clear-actuals" style="width: auto; flex-shrink: 0;" aria-label="Clear actuals data">
+                            Clear
+                        </button>
+                    </div>
+
+                    <div class="actuals-result" id="actuals-result" style="display:none">
                         <div class="actuals-result-title" id="actuals-result-msg"></div>
+                        <div class="tw-outer">
                         <div class="table-wrap">
-                            <table class="bayesian-table" aria-label="Bayesian update results">
+                            <table aria-label="Bayesian update results">
                                 <thead>
                                     <tr>
-                                        <th>Product</th>
-                                        <th>Updated μ</th>
-                                        <th>Updated σ</th>
-                                        <th>New Q*</th>
+                                        <th scope="col">Product</th>
+                                        <th scope="col">Updated μ<span class="tooltip-help" data-tip="Revised average demand per flight — the Tobit MLE model's updated estimate of true latent demand after incorporating today's actuals.">?</span></th>
+                                        <th scope="col">Updated σ<span class="tooltip-help" data-tip="Revised demand standard deviation — reflects how much actual sales vary around the updated mean across all observed flights.">?</span></th>
+                                        <th scope="col">New Q*</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bayesian-body"></tbody>
                             </table>
+                        </div>
                         </div>
                     </div>
                 </section>
@@ -726,13 +1028,10 @@
             <!-- ══ TAB: DAILY SALES MONITOR ══ -->
             <div class="tab-content" id="tab-monitor" role="tabpanel" aria-labelledby="tab-btn-monitor">
                 <section class="panel">
-                    <div class="panel-title">Daily Sales Monitor</div>
-                    <div class="panel-subtitle">
-                        Perishable sales from post-flight actuals uploads, broken down by day.
-                        Upload actuals in the "Post-Flight Actuals" tab to populate this view.
-                    </div>
+                    <div class="panel-head"><h3 class="panel-title">Daily Sales Monitor</h3></div>
+                    <p class="panel-subtitle">Perishable sales from post-flight actuals, broken down by day.</p>
 
-                    <div class="monitor-summary" id="monitor-summary" style="display: none;">
+                    <div class="monitor-summary" id="monitor-summary" style="display:none;margin-top:1.3rem">
                         <div class="monitor-stat">
                             <div class="monitor-stat-label">Days Tracked</div>
                             <div class="monitor-stat-value" id="mon-days">0</div>
@@ -741,17 +1040,26 @@
                             <div class="monitor-stat-label">Total Units Sold</div>
                             <div class="monitor-stat-value" id="mon-units">0</div>
                         </div>
-                        <div class="monitor-stat">
+                        <div class="monitor-stat gold">
                             <div class="monitor-stat-label">Total Revenue (THB)</div>
                             <div class="monitor-stat-value" id="mon-revenue">—</div>
                         </div>
                     </div>
 
-                    <button class="btn btn-secondary" id="btn-refresh-monitor"
-                            onclick="loadDailySales()" aria-label="Refresh sales data"
-                            style="width: auto; margin-bottom: 1.5rem;">
-                        ↻ Refresh Data
-                    </button>
+                    <div id="monitor-chart-container" style="display:none; margin-top: 1.5rem; margin-bottom: 1.5rem; background: var(--panel-2); border: 1px solid var(--line); padding: 1.25rem; border-radius: var(--r-md);">
+                        <canvas id="monitor-chart" role="img" aria-label="Line chart showing daily trends for total units sold, catered load, and physical wastage." style="width:100%; height:250px;"></canvas>
+                    </div>
+
+                    <div style="margin:1.3rem 0; display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn btn-secondary btn-sm" id="btn-refresh-monitor"
+                                onclick="loadDailySales(true)" aria-label="Refresh sales data">
+                            ↻ Refresh Data
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="btn-toggle-details"
+                                aria-expanded="true" aria-controls="monitor-cards" aria-label="Minimize daily details" style="display: none;">
+                            Hide Daily Details ▴
+                        </button>
+                    </div>
 
                     <div id="monitor-cards">
                         <div class="empty-state">
@@ -762,43 +1070,44 @@
                     </div>
                 </section>
             </div>
-
         </main>
     </div>
 
     <!-- ===== ADD ITEM MODAL ===== -->
-    <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal">
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button class="modal-close" aria-label="Close dialog">✕</button>
             <h3 id="modal-title">Add New Seasonal Item</h3>
             <form id="form-add-item">
                 <div class="form-group">
                     <label for="new-name">Product Name</label>
                     <input class="form-input" type="text" id="new-name" name="name"
-                           placeholder="e.g., Spicy Seafood Tom Yum Rice…" required autocomplete="off">
+                           placeholder="e.g. Spicy Seafood Tom Yum Rice" required autocomplete="off">
                 </div>
                 <div class="form-group">
                     <label for="new-code">Product Code</label>
                     <input class="form-input" type="text" id="new-code" name="code"
-                           placeholder="e.g., NEW-TY-001…" required autocomplete="off" spellcheck="false">
+                           placeholder="e.g. FNBG03002500" required autocomplete="off" spellcheck="false">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="new-price">Retail Price (THB)</label>
                         <input class="form-input" type="number" id="new-price" name="price"
-                               placeholder="180…" required min="1" inputmode="numeric">
+                               placeholder="180" required min="1" inputmode="numeric">
                     </div>
                     <div class="form-group">
                         <label for="new-cost">Unit Cost (THB)</label>
                         <input class="form-input" type="number" id="new-cost" name="cost"
-                               placeholder="55…" required min="1" inputmode="numeric">
+                               placeholder="55" required min="1" inputmode="numeric">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="new-proxy">Proxy Item (Historical Baseline)</label>
+                    <label for="new-proxy">Proxy Item · Cold-Start Baseline<span class="tooltip-help" data-tip="Theory 6 (Product Substitution): for new items with no sales history, demand is estimated by borrowing the historical pattern from a similar existing item. Choose the most comparable item by cuisine type and price tier.">?</span></label>
                     <select class="form-input" id="new-proxy" name="proxy_code">
                         <option value="">Select a similar item…</option>
                     </select>
                 </div>
+                <div id="modal-error" hidden aria-live="assertive"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Item</button>
@@ -807,26 +1116,107 @@
         </div>
     </div>
 
+    <!-- ===== UNDO TOAST ===== -->
+    <div class="undo-toast" id="undo-toast" role="status" aria-live="polite">
+        <span id="undo-toast-msg"></span>
+        <button class="undo-btn" id="undo-toast-btn">Undo</button>
+    </div>
+
     <script>
         const API = '';
+        const KBD_HINT = (navigator.platform.startsWith('Mac') || /Mac/.test(navigator.userAgent)) ? '⌘↵' : 'Ctrl+↵';
         let menuItems = [];
+        let modalMode = 'add'; // 'add' or 'edit'
+        let editingOriginalCode = '';
         let uploadedDemographics = null;
-        let uploadedFiles = [];
+        let paxFile = null;
+        let pbmFile = null;
         let actualsSalesFile = null;
         let actualsWastageFile = null;
+        let actualsPaxFile = null;
+        let monitorChart = null;
+
+        // ===== TOAST =====
+        let _toastTimer = null;
+        let _undoFn = null;
+        let _undoInProgress = false;
+
+        function showUndoToast(message, undoFn) {
+            clearTimeout(_toastTimer);
+            _undoFn = undoFn;
+            document.getElementById('undo-toast-msg').textContent = message;
+            document.getElementById('undo-toast').classList.add('visible');
+            _toastTimer = setTimeout(() => {
+                document.getElementById('undo-toast').classList.remove('visible');
+                _undoFn = null;
+            }, 4000);
+        }
+
+        document.getElementById('undo-toast-btn').addEventListener('click', async () => {
+            if (!_undoFn) return;
+            clearTimeout(_toastTimer);
+            document.getElementById('undo-toast').classList.remove('visible');
+            const fn = _undoFn;
+            _undoFn = null;
+            await fn();
+        });
+
+        function showInlineError(containerId, message) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            const banner = document.createElement('div');
+            banner.className = 'upload-alert error';
+            banner.setAttribute('role', 'alert');
+            const icon = document.createElement('em');
+            icon.className = 'inline-error-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = '✕';
+            const msg = document.createElement('span');
+            msg.textContent = message;
+            banner.appendChild(icon);
+            banner.appendChild(msg);
+            el.innerHTML = '';
+            el.appendChild(banner);
+            el.hidden = false;
+        }
+        function clearInlineError(containerId) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = '';
+            el.hidden = true;
+        }
 
         // ===== TAB SWITCHING =====
+        const TAB_NAMES = ['forecast', 'actuals', 'monitor'];
+
         function switchTab(name) {
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('active');
                 b.setAttribute('aria-selected', 'false');
+                b.setAttribute('tabindex', '-1');
             });
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-btn-${name}`).classList.add('active');
-            document.getElementById(`tab-btn-${name}`).setAttribute('aria-selected', 'true');
+            const activeBtn = document.getElementById(`tab-btn-${name}`);
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-selected', 'true');
+            activeBtn.setAttribute('tabindex', '0');
             document.getElementById(`tab-${name}`).classList.add('active');
             if (name === 'monitor') loadDailySales();
         }
+
+        document.querySelector('.tab-nav').addEventListener('keydown', e => {
+            const idx = TAB_NAMES.findIndex(n => document.getElementById(`tab-btn-${n}`) === document.activeElement);
+            if (idx === -1) return;
+            let next = -1;
+            if (e.key === 'ArrowRight') { e.preventDefault(); next = (idx + 1) % TAB_NAMES.length; }
+            if (e.key === 'ArrowLeft')  { e.preventDefault(); next = (idx - 1 + TAB_NAMES.length) % TAB_NAMES.length; }
+            if (e.key === 'Home')       { e.preventDefault(); next = 0; }
+            if (e.key === 'End')        { e.preventDefault(); next = TAB_NAMES.length - 1; }
+            if (next !== -1) {
+                switchTab(TAB_NAMES[next]);
+                document.getElementById(`tab-btn-${TAB_NAMES[next]}`).focus();
+            }
+        });
 
         // ===== MENU MANAGEMENT =====
         async function loadMenu() {
@@ -837,31 +1227,179 @@
                 renderMenu();
             } catch (e) {
                 document.getElementById('menu-loading').innerHTML =
-                    '<p style="color: var(--accent-crimson);">Failed to connect to server</p>';
+                    '<p style="color:var(--down);">Failed to connect to server</p>';
             }
         }
 
-        function renderMenu() {
-            const list = document.getElementById('menu-list');
-            if (menuItems.length === 0) {
-                list.innerHTML = '<div class="empty-state"><p>No perishable items found</p></div>';
-                return;
-            }
-            list.innerHTML = menuItems.map(item => `
-                <div class="menu-item" role="listitem">
-                    <div class="menu-info">
-                        <div class="menu-name" title="${item.name}">${item.name}</div>
-                        <div class="menu-meta">฿${item.price} sell / ฿${item.cost} cost</div>
+        let isAddingInline = false;
+
+        function renderMenuItem(item) {
+            if (editingOriginalCode && item.code === editingOriginalCode) {
+                // Inline Edit Mode
+                const proxyOptions = menuItems
+                    .filter(m => m.code !== item.code)
+                    .map(m => `<option value="${m.code}" ${m.code === item.proxy_code ? 'selected' : ''}>${m.name}</option>`)
+                    .join('');
+
+                return `<div class="menu-item-edit" role="listitem" style="padding: 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid var(--line-strong); border-radius: var(--r-md); display: flex; flex-direction: column; gap: 0.6rem; margin: 0.4rem 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line-strong); padding-bottom: 0.4rem; margin-bottom: 0.2rem;">
+                        <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 0.05em;">Editing Perishable</span>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <button class="btn-icon" onclick="saveInlineEdit('${item.code}')" aria-label="Save changes" title="Save changes" style="color: var(--up); background: rgba(54,201,138,0.1); width: 24px; height: 24px; padding: 0;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </button>
+                            <button class="btn-icon" onclick="cancelInlineEdit()" aria-label="Cancel editing" title="Cancel editing" style="color: var(--down); background: rgba(255,107,107,0.1); width: 24px; height: 24px; padding: 0;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
+                    <div>
+                        <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em;">Product Name</label>
+                        <input type="text" class="form-input" id="edit-name" value="${item.name}" placeholder="e.g. COCONUT WATER" style="padding: 0.45rem 0.55rem; font-size: 0.85rem; border-color: rgba(255,255,255,0.1);">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <div>
+                            <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em;">SKU Code</label>
+                            <input type="text" class="form-input" id="edit-code" value="${item.code}" placeholder="e.g. CNC" style="padding: 0.45rem 0.55rem; font-size: 0.85rem; border-color: rgba(255,255,255,0.1);">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem;">
+                            <div>
+                                <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em; text-align: center;">Price</label>
+                                <input type="number" class="form-input" id="edit-price" value="${Math.round(item.price)}" style="padding: 0.45rem 0.25rem; font-size: 0.85rem; text-align: center; border-color: rgba(255,255,255,0.1);">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em; text-align: center;">Cost</label>
+                                <input type="number" class="form-input" id="edit-cost" value="${Math.round(item.cost)}" style="padding: 0.45rem 0.25rem; font-size: 0.85rem; text-align: center; border-color: rgba(255,255,255,0.1);">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em;">Proxy Item</label>
+                        <select class="form-input" id="edit-proxy" style="padding: 0.45rem 0.55rem; font-size: 0.85rem; border-color: rgba(255,255,255,0.1);">
+                            <option value="">Select a similar item…</option>
+                            ${proxyOptions}
+                        </select>
+                    </div>
+                    <div id="inline-edit-error" style="color: var(--down); font-size: 0.72rem; display: none; margin-top: 0.1rem; font-weight: 600;"></div>
+                </div>`;
+            }
+
+            return `<div class="menu-item" role="listitem">
+                <div class="menu-info">
+                    <div class="menu-name" title="${item.name}">${item.name}</div>
+                    <div class="menu-meta">฿${item.price} sell / <b>฿${item.cost}</b> cost <span style="opacity:0.4; margin-left:0.3rem;">[${item.code}]</span></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: .6rem;">
+                    <button class="btn-icon btn-edit-item" 
+                            onclick="startInlineEdit('${item.code}')" 
+                            aria-label="Edit ${item.name}"
+                            title="Edit ${item.name}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                        </svg>
+                    </button>
                     <label class="switch">
                         <input type="checkbox" ${item.active ? 'checked' : ''}
                                onchange="toggleItem('${item.code}')"
                                aria-label="Toggle ${item.name}">
-                        <span class="switch-slider"></span>
+                        <span class="sl"></span>
                     </label>
                 </div>
-            `).join('');
-            updateActiveCount();
+            </div>`;
+        }
+
+        function renderMenu() {
+            const active   = menuItems.filter(m => m.active);
+            const inactive = menuItems.filter(m => !m.active);
+            const list     = document.getElementById('menu-list');
+
+            if (active.length === 0 && inactive.length === 0 && !isAddingInline) {
+                list.innerHTML = '<div class="empty-state"><p>No perishable items found</p></div>';
+            } else if (active.length === 0 && !isAddingInline) {
+                list.innerHTML = '<div class="empty-state" style="padding:1rem 0"><p>No active items</p></div>';
+            } else {
+                list.innerHTML = active.map(renderMenuItem).join('');
+            }
+
+            if (isAddingInline) {
+                const proxyOptions = menuItems
+                    .map(m => `<option value="${m.code}">${m.name}</option>`)
+                    .join('');
+
+                const addFormHtml = `<div class="menu-item-edit" role="listitem" style="padding: 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid var(--line-strong); border-radius: var(--r-md); display: flex; flex-direction: column; gap: 0.6rem; margin: 0.4rem 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line-strong); padding-bottom: 0.4rem; margin-bottom: 0.2rem;">
+                        <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--red-bright); letter-spacing: 0.05em;">New Perishable Item</span>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <button class="btn-icon" onclick="saveInlineAdd()" aria-label="Save new item" title="Save new item" style="color: var(--up); background: rgba(54,201,138,0.1); width: 24px; height: 24px; padding: 0;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </button>
+                            <button class="btn-icon" onclick="cancelInlineAdd()" aria-label="Cancel adding" title="Cancel adding" style="color: var(--down); background: rgba(255,107,107,0.1); width: 24px; height: 24px; padding: 0;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em;">Product Name</label>
+                        <input type="text" class="form-input" id="add-name" placeholder="e.g. COCONUT WATER" style="padding: 0.45rem 0.55rem; font-size: 0.85rem; border-color: rgba(255,255,255,0.1);">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <div>
+                            <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em;">SKU Code</label>
+                            <input type="text" class="form-input" id="add-code" placeholder="e.g. CNC" style="padding: 0.45rem 0.55rem; font-size: 0.85rem; border-color: rgba(255,255,255,0.1);">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem;">
+                            <div>
+                                <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em; text-align: center;">Price</label>
+                                <input type="number" class="form-input" id="add-price" placeholder="90" style="padding: 0.45rem 0.25rem; font-size: 0.85rem; text-align: center; border-color: rgba(255,255,255,0.1);">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em; text-align: center;">Cost</label>
+                                <input type="number" class="form-input" id="add-cost" placeholder="30" style="padding: 0.45rem 0.25rem; font-size: 0.85rem; text-align: center; border-color: rgba(255,255,255,0.1);">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem; font-weight:600; letter-spacing:0.04em;">Proxy Item</label>
+                        <select class="form-input" id="add-proxy" style="padding: 0.45rem 0.55rem; font-size: 0.85rem; border-color: rgba(255,255,255,0.1);">
+                            <option value="">Select a similar item…</option>
+                            ${proxyOptions}
+                        </select>
+                    </div>
+                    <div id="inline-add-error" style="color: var(--down); font-size: 0.72rem; display: none; margin-top: 0.1rem; font-weight: 600;"></div>
+                </div>`;
+
+                if (list.innerHTML.includes('empty-state')) {
+                    list.innerHTML = addFormHtml;
+                } else {
+                    list.innerHTML = addFormHtml + list.innerHTML;
+                }
+            }
+
+            const toggle      = document.getElementById('inactive-toggle');
+            const inactiveList = document.getElementById('inactive-list');
+            if (inactive.length > 0) {
+                toggle.hidden = false;
+                document.getElementById('inactive-toggle-label').textContent =
+                    `Inactive items (${inactive.length})`;
+                inactiveList.innerHTML = inactive.map(renderMenuItem).join('');
+            } else {
+                toggle.hidden = true;
+                toggle.setAttribute('aria-expanded', 'false');
+                inactiveList.hidden = true;
+                inactiveList.innerHTML = '';
+            }
+
+            document.getElementById('active-count').textContent = active.length;
             populateProxySelect();
         }
 
@@ -873,23 +1411,31 @@
                     body: JSON.stringify({ code })
                 });
                 const item = menuItems.find(m => m.code === code);
-                if (item) item.active = !item.active;
-                updateActiveCount();
+                if (item) {
+                    item.active = !item.active;
+                    renderMenu();
+                    if (!_undoInProgress) {
+                        const label = `"${item.name}" ${item.active ? 'activated' : 'deactivated'}`;
+                        showUndoToast(label, async () => {
+                            _undoInProgress = true;
+                            await toggleItem(code);
+                            _undoInProgress = false;
+                        });
+                    }
+                }
             } catch (e) { console.error('Toggle failed:', e); }
         }
 
-        function updateActiveCount() {
-            document.getElementById('active-count').textContent = menuItems.filter(m => m.active).length;
-        }
-
-        function populateProxySelect() {
+        function populateProxySelect(excludeCode = null) {
             const sel = document.getElementById('new-proxy');
-            const placeholder = sel.querySelector('option[value=""]') || document.createElement('option');
+            if (!sel) return;
+            const placeholder = document.createElement('option');
             placeholder.value = '';
             placeholder.textContent = 'Select a similar item…';
             sel.innerHTML = '';
             sel.appendChild(placeholder);
             menuItems.forEach(item => {
+                if (excludeCode && item.code === excludeCode) return;
                 const opt = document.createElement('option');
                 opt.value = item.code;
                 opt.textContent = item.name;
@@ -897,99 +1443,279 @@
             });
         }
 
-        // ===== FILE UPLOAD (Forecast tab) =====
-        const uploadZone = document.getElementById('upload-zone');
-        const fileInput  = document.getElementById('file-input');
-
-        uploadZone.addEventListener('click', () => fileInput.click());
-        uploadZone.addEventListener('keydown', e => {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
-        });
-        uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-        uploadZone.addEventListener('drop', e => {
-            e.preventDefault();
-            uploadZone.classList.remove('drag-over');
-            handleFiles(e.dataTransfer.files);
-        });
-        fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-        function classifyFile(file) {
-            const n = file.name.toLowerCase();
-            if (n.includes('passenger') || n.includes('pax') || n.includes('nat_age') || n.includes('nat-age'))
-                return 'passenger';
-            if (n.includes('pbm') || n.includes('prebook') || n.includes('pre_book') || n.includes('pre-book'))
-                return 'pbm';
-            console.warn(`classifyFile: '${file.name}' did not match passenger or PBM patterns — treated as passenger`);
-            return 'passenger'; // default fallback
+        function startInlineEdit(code) {
+            isAddingInline = false; // cancel any active adding
+            editingOriginalCode = code;
+            renderMenu();
+            document.getElementById('edit-name')?.focus();
         }
 
-        async function handleFiles(files) {
-            uploadedFiles = Array.from(files).filter(f => f.name.endsWith('.csv'));
-            if (uploadedFiles.length === 0) return;
+        function cancelInlineEdit() {
+            editingOriginalCode = '';
+            renderMenu();
+        }
 
-            const chips = document.getElementById('file-chips');
-            chips.innerHTML = uploadedFiles.map(f => `<span class="file-chip">✓ ${f.name}</span>`).join('');
-            uploadZone.classList.add('has-files');
+        async function saveInlineEdit(originalCode) {
+            const name = document.getElementById('edit-name').value.trim();
+            const code = document.getElementById('edit-code').value.trim();
+            const priceVal = document.getElementById('edit-price').value;
+            const costVal = document.getElementById('edit-cost').value;
+            const proxy_code = document.getElementById('edit-proxy').value || null;
+
+            const errorEl = document.getElementById('inline-edit-error');
+            if (errorEl) {
+                errorEl.style.display = 'none';
+                errorEl.textContent = '';
+            }
+
+            if (!name || !code || !priceVal || !costVal) {
+                if (errorEl) {
+                    errorEl.textContent = 'All fields are required';
+                    errorEl.style.display = 'block';
+                }
+                return;
+            }
+
+            const price = parseFloat(priceVal);
+            const cost = parseFloat(costVal);
+
+            if (isNaN(price) || isNaN(cost)) {
+                if (errorEl) {
+                    errorEl.textContent = 'Price and cost must be numbers';
+                    errorEl.style.display = 'block';
+                }
+                return;
+            }
+
+            const payload = {
+                original_code: originalCode,
+                code: code,
+                name: name,
+                price: price,
+                cost: cost,
+                proxy_code: proxy_code
+            };
+
+            try {
+                const res = await fetch(`${API}/api/menu/edit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    if (errorEl) {
+                        errorEl.textContent = err.error || `Server error ${res.status}`;
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+                editingOriginalCode = '';
+                await loadMenu();
+            } catch (e) {
+                console.error('Edit item failed:', e);
+                if (errorEl) {
+                    errorEl.textContent = 'Connection error';
+                    errorEl.style.display = 'block';
+                }
+            }
+        }
+
+        document.getElementById('inactive-toggle').addEventListener('click', function () {
+            const expanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', String(!expanded));
+            document.getElementById('inactive-list').hidden = expanded;
+        });
+
+        // ===== UPLOAD ZONES (Forecast Tab) =====
+        function wireUploadZone(zoneId, inputId, chipId, onFile) {
+            const zone  = document.getElementById(zoneId);
+            const input = document.getElementById(inputId);
+            zone.addEventListener('click',   () => input.click());
+            zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+            zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault(); zone.classList.remove('drag-over');
+                const f = Array.from(e.dataTransfer.files).find(f => f.name.endsWith('.csv'));
+                if (f) selectFile(f, zone, chipId, onFile);
+            });
+            input.addEventListener('change', e => {
+                if (e.target.files[0]) selectFile(e.target.files[0], zone, chipId, onFile);
+            });
+        }
+
+        function selectFile(file, zone, chipId, onFile) {
+            document.getElementById(chipId).innerHTML = `<span class="file-chip">✓ ${file.name}</span>`;
+            zone.classList.add('has-files');
+            onFile(file);
+            tryUpload();
+        }
+
+        wireUploadZone('uz-pax', 'in-pax', 'chip-pax', f => { paxFile = f; });
+        wireUploadZone('uz-pbm', 'in-pbm', 'chip-pbm', f => { pbmFile = f; });
+
+        async function tryUpload() {
+            if (!paxFile) return;
+            clearInlineError('upload-error');
 
             const formData = new FormData();
-            uploadedFiles.forEach(f => formData.append(classifyFile(f), f));
+            formData.append('passenger', paxFile);
+            if (pbmFile) formData.append('pbm', pbmFile);
 
             try {
                 const res  = await fetch(`${API}/api/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
-                if (data.error) { alert(`Upload error: ${data.error}`); return; }
+                if (data.error) { showInlineError('upload-error', data.error); return; }
+                clearInlineError('upload-error');
                 uploadedDemographics = data;
                 document.getElementById('btn-forecast').disabled = false;
                 document.getElementById('btn-forecast').title = '';
 
-                // Show meta row
-                const meta = document.getElementById('upload-meta');
-                meta.style.display = 'flex';
+                document.getElementById('upload-meta').style.display = 'flex';
 
-                // Flight date badge
                 if (data.flight_date) {
                     document.getElementById('upload-date-badge').textContent = `📅 Forecast Date: ${data.flight_date}`;
                     document.getElementById('kpi-date').textContent = data.flight_date;
                 }
+                document.getElementById('upload-pax-stat').textContent = `👥 ${(data.total_pax  || 0).toLocaleString()} pax`;
+                document.getElementById('upload-pbm-stat').textContent = `🍱 ${(data.pbm_count  || 0).toLocaleString()} PBM`;
+                document.getElementById('upload-dup-warn').style.display     = data.already_uploaded     ? 'flex' : 'none';
+                document.getElementById('upload-pbm-dup-warn').style.display = data.pbm_already_uploaded ? 'flex' : 'none';
 
-                // Pax & PBM counts
-                document.getElementById('upload-pax-stat').textContent =
-                    `👥 ${(data.total_pax || 0).toLocaleString()} pax`;
-                document.getElementById('upload-pbm-stat').textContent =
-                    `🍱 ${(data.pbm_count || 0).toLocaleString()} PBM`;
+                document.getElementById('kpi-pax').textContent = (data.total_pax  || 0).toLocaleString();
+                document.getElementById('kpi-bob').textContent = (data.net_bob    || 0).toLocaleString();
+                document.getElementById('kpi-pbm').textContent = (data.pbm_count  || 0).toLocaleString();
 
-                // Duplicate warnings
-                document.getElementById('upload-dup-warn').style.display =
-                    data.already_uploaded ? 'flex' : 'none';
-                document.getElementById('upload-pbm-dup-warn').style.display =
-                    data.pbm_already_uploaded ? 'flex' : 'none';
-
-                // KPI cards
-                document.getElementById('kpi-pax').textContent = (data.total_pax || 0).toLocaleString();
-                document.getElementById('kpi-bob').textContent = (data.net_bob  || 0).toLocaleString();
-                document.getElementById('kpi-pbm').textContent = (data.pbm_count|| 0).toLocaleString();
-
-                // Nationality breakdown pills
                 const natRow = document.getElementById('nat-row');
                 if (data.nationalities && Object.keys(data.nationalities).length > 0) {
-                    const total = Object.values(data.nationalities).reduce((a, b) => a + b, 0);
+                    const total  = Object.values(data.nationalities).reduce((a, b) => a + b, 0);
                     const sorted = Object.entries(data.nationalities).sort((a, b) => b[1] - a[1]);
-                    natRow.innerHTML = '<span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-right:0.25rem;">Nationality mix:</span>'
+                    natRow.innerHTML = '<span class="nat-label">Nationality mix:</span>'
                         + sorted.map(([country, count]) => {
                             const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-                            return `<span class="nat-pill">${country}<span class="nat-pct">${pct}%</span></span>`;
+                            return `<span class="nat-pill">${country}<b>${pct}%</b></span>`;
                         }).join('');
                     natRow.style.display = 'flex';
                 } else {
                     natRow.style.display = 'none';
                 }
-
-            } catch (e) { alert('Upload failed — check that the CSV is valid and try again.'); }
+            } catch (e) { showInlineError('upload-error', 'Upload failed: check that the CSV is valid and try again.'); }
         }
 
         // ===== FORECAST =====
         document.getElementById('btn-forecast').addEventListener('click', runForecast);
+        document.getElementById('btn-export-csv').addEventListener('click', exportResultsToCSV);
+
+        function exportResultsToCSV() {
+            const rows = document.querySelectorAll('.result-row');
+            if (rows.length === 0) return;
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Product,Adjusted Q*,Baseline Q*,Delta,Service Level,True Demand (mu),Stockout Risk (%)\n";
+
+            rows.forEach(tr => {
+                const name = tr.querySelector('.col-product').textContent.trim();
+                const qAdjusted = tr.querySelector('.q-override').value;
+                const qBaseline = tr.querySelector('.q-override').dataset.baseline;
+                const delta = parseInt(qAdjusted) - parseInt(qBaseline);
+                const serviceLevelText = tr.querySelector('.cr-bar span').textContent.trim();
+                
+                const detailRow = document.getElementById(tr.dataset.detail);
+                let mu = "";
+                let stockout = "";
+                if (detailRow) {
+                    const detailVals = detailRow.querySelectorAll('.detail-val');
+                    if (detailVals.length >= 2) {
+                        mu = detailVals[0].textContent.trim();
+                        stockout = detailVals[1].textContent.trim().replace('%', '');
+                    }
+                }
+
+                const formattedName = name.includes(',') ? `"${name}"` : name;
+                csvContent += `${formattedName},${qAdjusted},${qBaseline},${delta},${serviceLevelText},${mu},${stockout}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            const dateStr = document.getElementById('kpi-date').textContent.trim() || 'forecast';
+            const cleanDateStr = dateStr.replace(/[^a-zA-Z0-9-]/g, '_');
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `TAA_Qstar_Forecast_${cleanDateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('btn-clear-forecast').addEventListener('click', () => {
+            // Reset files & data state
+            paxFile = null;
+            pbmFile = null;
+            uploadedDemographics = null;
+
+            // Reset file inputs
+            document.getElementById('in-pax').value = '';
+            document.getElementById('in-pbm').value = '';
+
+            // Reset dropzones visual state & chip content
+            document.getElementById('chip-pax').innerHTML = '';
+            document.getElementById('chip-pbm').innerHTML = '';
+            document.getElementById('uz-pax').classList.remove('has-files');
+            document.getElementById('uz-pbm').classList.remove('has-files');
+
+            // Reset badges & tables
+            document.getElementById('upload-meta').style.display = 'none';
+            document.getElementById('upload-dup-warn').style.display = 'none';
+            document.getElementById('upload-pbm-dup-warn').style.display = 'none';
+            
+            const natRow = document.getElementById('nat-row');
+            if (natRow) {
+                natRow.style.display = 'none';
+                natRow.innerHTML = '';
+            }
+
+            // Reset KPIs to default placeholder state
+            document.getElementById('kpi-pax').textContent = '—';
+            document.getElementById('kpi-bob').textContent = '—';
+            document.getElementById('kpi-pbm').textContent = '—';
+            document.getElementById('kpi-date').textContent = '—';
+
+            // Clean errors & reset output recommendations
+            clearInlineError('upload-error');
+            document.getElementById('results-body').innerHTML = `<tr>
+                <td colspan="6">
+                    <div class="empty-state">
+                        <div class="icon" aria-hidden="true">🧮</div>
+                        <p>Upload a manifest and run the forecast to generate optimal loading recommendations.</p>
+                    </div>
+                </td>
+            </tr>`;
+
+            // Reset buttons
+            const btnForecast = document.getElementById('btn-forecast');
+            btnForecast.disabled = true;
+            btnForecast.title = 'Upload passenger manifest first';
+
+            const exportBtn = document.getElementById('btn-export-csv');
+            if (exportBtn) exportBtn.style.display = 'none';
+
+            // Reset engine status visual cue
+            const dot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            if (dot) {
+                dot.style.background = 'var(--up)';
+                dot.style.boxShadow = '0 0 10px var(--up)';
+            }
+            if (statusText) {
+                statusText.textContent = 'Engine Ready';
+            }
+
+            // Reset forecast timestamp and aria-live status
+            const ts = document.getElementById('forecast-timestamp');
+            if (ts) ts.hidden = true;
+            const statusAnnounce = document.getElementById('results-status');
+            if (statusAnnounce) statusAnnounce.textContent = '';
+        });
 
         async function runForecast() {
             const btn = document.getElementById('btn-forecast');
@@ -998,8 +1724,8 @@
 
             const dot = document.getElementById('status-dot');
             const statusText = document.getElementById('status-text');
-            dot.style.background = 'var(--accent-amber)';
-            dot.style.boxShadow  = '0 0 8px var(--accent-amber)';
+            dot.style.background = 'var(--warn)';
+            dot.style.boxShadow  = '0 0 8px var(--warn)';
             statusText.textContent = 'Computing…';
 
             try {
@@ -1014,63 +1740,139 @@
                 }
                 const results = await res.json();
                 renderResults(results);
-                dot.style.background = 'var(--accent-emerald)';
-                dot.style.boxShadow  = '0 0 8px var(--accent-emerald)';
+                dot.style.background = 'var(--up)';
+                dot.style.boxShadow  = '0 0 8px var(--up)';
                 statusText.textContent = `Optimized ${results.length} items`;
+                const ts = document.getElementById('forecast-timestamp');
+                if (ts) {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = document.getElementById('kpi-date').textContent;
+                    ts.textContent = `Generated at ${timeStr} for flight ${dateStr}`;
+                    ts.hidden = false;
+                }
+                const statusAnnounce = document.getElementById('results-status');
+                if (statusAnnounce) statusAnnounce.textContent = `Forecast complete: ${results.length} items optimized.`;
             } catch (e) {
                 console.error('Forecast failed:', e);
-                dot.style.background = 'var(--accent-crimson)';
-                dot.style.boxShadow  = '0 0 8px var(--accent-crimson)';
-                statusText.textContent = 'Error — check server';
+                dot.style.background = 'var(--down)';
+                dot.style.boxShadow  = '0 0 8px var(--down)';
+                statusText.textContent = 'Error (check server)';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Run Hyper-Personalized Forecast 🚀';
+                btn.innerHTML = `Run Q* Forecast →<kbd>${KBD_HINT}</kbd>`;
             }
         }
 
         function renderResults(results) {
             const tbody = document.getElementById('results-body');
+            const exportBtn = document.getElementById('btn-export-csv');
             if (!results || results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><p>No active perishable items to optimize</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>No active perishable items to optimize</p></div></td></tr>';
+                if (exportBtn) exportBtn.style.display = 'none';
                 return;
             }
-            tbody.innerHTML = results.map(r => {
+            if (exportBtn) exportBtn.style.display = 'inline-flex';
+            tbody.innerHTML = results.map((r, idx) => {
                 const delta = r.q_adjusted - r.q_baseline;
-                let badgeClass = 'badge-neutral', deltaText = '0';
-                if (delta > 0) { badgeClass = 'badge-up';   deltaText = `+${delta}`; }
-                else if (delta < 0) { badgeClass = 'badge-down'; deltaText = `${delta}`; }
+                let badgeClass = 'b-flat', deltaText = '0';
+                if (delta > 0)      { badgeClass = 'b-up';   deltaText = `+${delta}`; }
+                else if (delta < 0) { badgeClass = 'b-down'; deltaText = `${delta}`; }
 
-                const gammaTag = r.gamma != null && Math.abs(r.gamma - 1.0) > 0.01
-                    ? `<span class="theory-tag" style="margin-top:0.25rem;" title="Demographic multiplier (A1)">γ=${r.gamma.toFixed(2)}</span>`
-                    : '';
+                const crPct = Math.round((r.critical_ratio || 0) * 100);
+                const crBar = `<div class="cr-bar">
+                    <span>${crPct}%</span>
+                    <div class="cr-track"><div class="cr-fill" style="width:${crPct}%"></div></div>
+                </div>`;
 
                 const theories = (r.theories_applied || []).map(t => {
-                    const isCold = t.includes('Substitution') || t.includes('Bayesian');
-                    return `<span class="theory-tag ${isCold ? 'cold' : ''}">${t}</span>`;
+                    const isGold = t.includes('Substitution') || t.includes('Bayesian') || t.includes('ExpectedProfit') || t.includes('GracePeriod');
+                    return `<span class="theory-tag ${isGold ? 'gold' : ''}">${t}</span>`;
                 }).join('');
 
-                return `<tr data-sku="${r.code}">
-                    <td style="font-weight:600; max-width:200px; overflow:hidden; text-overflow:ellipsis;">${r.name}</td>
-                    <td>฿${r.price?.toFixed(0)}</td>
-                    <td>฿${r.cost?.toFixed(0)}</td>
-                    <td>${(r.critical_ratio * 100).toFixed(1)}%</td>
-                    <td>${r.stockout_pct?.toFixed(1)}%</td>
-                    <td>${r.mu?.toFixed(1)}</td>
-                    <td class="q-value">${r.q_baseline}</td>
-                    <td class="q-value" style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
-                        <input type="number" class="q-override"
-                               value="${r.q_adjusted}"
-                               data-baseline="${r.q_baseline}"
-                               min="0" step="1"
-                               aria-label="Adjusted Q* for ${r.name}">
-                        ${gammaTag}
+                const gammaDetail = (r.gamma != null && Math.abs(r.gamma - 1.0) > 0.01)
+                    ? `<div class="detail-item">
+                        <span class="detail-lbl">Demographic Adj. (γ)</span>
+                        <span class="detail-val">${r.gamma.toFixed(2)}×</span>
+                      </div>`
+                    : '';
+
+                const gracePeriodDetail = r.is_grace_period_applied
+                    ? `<div class="detail-item" style="border-left: 2px solid var(--gold); padding-left: 8px;">
+                        <span class="detail-lbl" style="color: var(--gold-bright);">Grace Period Active</span>
+                        <span class="detail-val" style="font-size: 0.76rem; font-weight: normal; color: var(--text-2);">Always load min 1 unit to collect sales data.</span>
+                      </div>`
+                    : '';
+
+                const detailId = `detail-${idx}`;
+
+                return `<tr class="result-row" data-sku="${r.code}" data-detail="${detailId}">
+                    <td class="col-product" style="overflow:hidden;text-overflow:ellipsis;">${r.name}</td>
+                    <td class="col-qstar">
+                        <div class="q-cell">
+                            <input type="number" class="q-override"
+                                   value="${r.q_adjusted}"
+                                   data-baseline="${r.q_baseline}"
+                                   min="0" step="1"
+                                   aria-label="Adjusted Q* for ${r.name}">
+                            <button class="q-reset-btn"
+                                    aria-label="Reset Q* to model value (${r.q_baseline}) for ${r.name}"
+                                    title="Reset to model value (${r.q_baseline})">↺</button>
+                        </div>
+                        ${r.expected_profit_override_applied ? `<div style="margin-top: 4px;"><span class="badge-stop-load" style="background: rgba(227,174,69,0.12); color: var(--gold-bright); border: 1px solid rgba(227,174,69,0.3); font-size: .68rem; font-weight: 700; padding: .15rem .4rem; border-radius: 4px; letter-spacing: .02em; display: inline-flex; align-items: center; gap: .25rem;" title="Expected profitability is non-positive. Setting Q* to 0 to maximize total flight margin.">⚠️ Stop Load (Non-profitable)</span></div>` : ''}
                     </td>
-                    <td><span class="${badgeClass} delta-cell">${deltaText}</span></td>
-                    <td><div class="theory-tags">${theories}</div></td>
+                    <td class="col-delta"><span class="badge ${badgeClass} delta-cell">${deltaText}</span></td>
+                    <td class="col-baseline"><span class="q-base">${r.q_baseline}</span></td>
+                    <td class="col-fstar">${crBar}</td>
+                    <td class="col-expand">
+                        <button class="row-expand-btn" aria-expanded="false" aria-controls="${detailId}"
+                                aria-label="Show model details for ${r.name}">
+                            <span class="chev" aria-hidden="true">▸</span>
+                        </button>
+                    </td>
+                </tr>
+                <tr class="detail-row" id="${detailId}" hidden>
+                    <td colspan="6">
+                        <div class="detail-inner">
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <span class="detail-lbl">True Demand (μ)</span>
+                                    <span class="detail-val">${r.mu?.toFixed(1)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-lbl">Stockout Risk</span>
+                                    <span class="detail-val">${r.stockout_pct?.toFixed(1)}%</span>
+                                </div>
+                                <div class="detail-item" style="min-width:140px;">
+                                    <span class="detail-lbl">Expected Profit</span>
+                                    <span class="detail-val" style="color: ${r.expected_profit_override_applied ? 'var(--down)' : '#6fe3ab'}">
+                                        ${r.expected_profit_override_applied 
+                                            ? `0.00 THB <span style="font-size: 0.7rem; color: var(--text-muted); display: block; font-weight: normal; margin-top: 0.15rem;">(Would be -${Math.abs(r.expected_profit_baseline).toFixed(2)} THB if loaded)</span>` 
+                                            : `${r.expected_profit?.toFixed(2)} THB`
+                                        }
+                                    </span>
+                                </div>
+                                ${gammaDetail}
+                                ${gracePeriodDetail}
+                                <div class="detail-item" style="flex:1;min-width:160px;">
+                                    <span class="detail-lbl">Theories Applied</span>
+                                    <div class="theory-tags" style="margin-top:.3rem;">${theories}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
 
-            // Wire up manual override — updates Δ badge live
+            document.querySelectorAll('.row-expand-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const expanded = btn.getAttribute('aria-expanded') === 'true';
+                    btn.setAttribute('aria-expanded', String(!expanded));
+                    const detailRow = document.getElementById(btn.getAttribute('aria-controls'));
+                    detailRow.hidden = expanded;
+                });
+            });
+
             document.querySelectorAll('.q-override').forEach(input => {
                 input.addEventListener('input', () => {
                     const baseline = parseInt(input.dataset.baseline) || 0;
@@ -1078,49 +1880,59 @@
                     const d = val - baseline;
                     const badge = input.closest('tr').querySelector('.delta-cell');
                     badge.textContent = d > 0 ? `+${d}` : `${d}`;
-                    badge.className = `delta-cell ${d > 0 ? 'badge-up' : d < 0 ? 'badge-down' : 'badge-neutral'}`;
+                    badge.className = `badge delta-cell ${d > 0 ? 'b-up' : d < 0 ? 'b-down' : 'b-flat'}`;
+                });
+            });
+
+            document.querySelectorAll('.q-reset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = btn.closest('.q-cell').querySelector('.q-override');
+                    input.value = input.dataset.baseline;
+                    input.dispatchEvent(new Event('input'));
+                    input.focus();
                 });
             });
         }
 
-        // ===== POST-FLIGHT ACTUALS TAB =====
-        const salesZone    = document.getElementById('actuals-sales-zone');
-        const wastageZone  = document.getElementById('actuals-wastage-zone');
-        const salesInput   = document.getElementById('actuals-sales-input');
-        const wastageInput = document.getElementById('actuals-wastage-input');
-
-        function wireActualsZone(zone, input, chipId, fileVar) {
-            zone.addEventListener('click', () => input.click());
-            zone.addEventListener('keydown', e => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
-            });
+        // ===== POST-FLIGHT ACTUALS =====
+        function wireActualsZone(zoneId, inputId, chipId, varName) {
+            const zone  = document.getElementById(zoneId);
+            const input = document.getElementById(inputId);
+            zone.addEventListener('click',   () => input.click());
+            zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
             zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
             zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
             zone.addEventListener('drop', e => {
                 e.preventDefault(); zone.classList.remove('drag-over');
                 const f = e.dataTransfer.files[0];
-                if (f && f.name.endsWith('.csv')) { setActualsFile(fileVar, f, chipId, zone); }
+                if (f && f.name.endsWith('.csv')) setActualsFile(varName, f, chipId, zone);
             });
             input.addEventListener('change', e => {
                 const f = e.target.files[0];
-                if (f) setActualsFile(fileVar, f, chipId, zone);
+                if (f) setActualsFile(varName, f, chipId, zone);
             });
         }
 
         function setActualsFile(varName, file, chipId, zone) {
             if (varName === 'sales')   actualsSalesFile   = file;
             if (varName === 'wastage') actualsWastageFile = file;
-            document.getElementById(chipId).innerHTML =
-                `<span class="file-chip">✓ ${file.name}</span>`;
+            if (varName === 'pax')     actualsPaxFile     = file;
+            document.getElementById(chipId).innerHTML = `<span class="file-chip">✓ ${file.name}</span>`;
             zone.classList.add('has-files');
         }
 
-        wireActualsZone(salesZone,   salesInput,   'actuals-sales-chip',   'sales');
-        wireActualsZone(wastageZone, wastageInput, 'actuals-wastage-chip', 'wastage');
+        wireActualsZone('actuals-sales-zone',   'actuals-sales-input',   'actuals-sales-chip',   'sales');
+        wireActualsZone('actuals-wastage-zone',  'actuals-wastage-input', 'actuals-wastage-chip', 'wastage');
+        wireActualsZone('actuals-pax-zone',      'actuals-pax-input',     'actuals-pax-chip',     'pax');
 
         document.getElementById('btn-submit-actuals').addEventListener('click', async () => {
-            if (!actualsSalesFile && !actualsWastageFile) {
-                alert('Please upload at least one file (actual sales or wastage CSV).');
+            clearInlineError('actuals-error');
+             if (!actualsSalesFile && !actualsWastageFile) {
+                showInlineError('actuals-error', 'Upload at least one file (actual sales or wastage CSV).');
+                return;
+            }
+            if (!actualsPaxFile) {
+                showInlineError('actuals-error', 'Boarded passenger file is required. Export the final manifest from PSS after the flight and upload it; without it, the Tobit refit cannot compute the demand rate for this flight.');
                 return;
             }
             const btn = document.getElementById('btn-submit-actuals');
@@ -1128,26 +1940,55 @@
             btn.innerHTML = '<span class="spinner"></span> Updating Model…';
 
             const formData = new FormData();
-            if (actualsSalesFile)   formData.append('sales',   actualsSalesFile);
-            if (actualsWastageFile) formData.append('wastage', actualsWastageFile);
+            if (actualsSalesFile)   formData.append('sales',      actualsSalesFile);
+            if (actualsWastageFile) formData.append('wastage',    actualsWastageFile);
+            formData.append('passenger', actualsPaxFile);
 
             try {
                 const res  = await fetch(`${API}/api/actuals`, { method: 'POST', body: formData });
                 const data = await res.json();
-                if (data.error) { alert(`Error: ${data.error}`); return; }
+                if (data.error) { showInlineError('actuals-error', data.error); return; }
+                clearInlineError('actuals-error');
                 showActualsResult(data);
             } catch (e) {
                 console.error('Actuals submission failed:', e);
-                alert('Failed to submit actuals — check server connection.');
+                showInlineError('actuals-error', 'Failed to submit actuals. Check server connection.');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Submit Actuals &amp; Update Model →';
+                btn.innerHTML = `Submit Actuals &amp; Refit Model →<kbd>${KBD_HINT}</kbd>`;
             }
         });
 
+        document.getElementById('btn-clear-actuals').addEventListener('click', () => {
+            // Reset files & data state
+            actualsSalesFile = null;
+            actualsWastageFile = null;
+            actualsPaxFile = null;
+
+            // Reset file inputs
+            document.getElementById('actuals-sales-input').value = '';
+            document.getElementById('actuals-wastage-input').value = '';
+            document.getElementById('actuals-pax-input').value = '';
+
+            // Reset dropzones visual state & chip content
+            document.getElementById('actuals-sales-chip').innerHTML = '';
+            document.getElementById('actuals-wastage-chip').innerHTML = '';
+            document.getElementById('actuals-pax-chip').innerHTML = '';
+            document.getElementById('actuals-sales-zone').classList.remove('has-files');
+            document.getElementById('actuals-wastage-zone').classList.remove('has-files');
+            document.getElementById('actuals-pax-zone').classList.remove('has-files');
+
+            // Hide output element & clear messages
+            document.getElementById('actuals-result').style.display = 'none';
+            document.getElementById('bayesian-body').innerHTML = '';
+            document.getElementById('actuals-result-msg').textContent = '';
+
+            // Clear inline errors
+            clearInlineError('actuals-error');
+        });
+
         function showActualsResult(data) {
-            const panel = document.getElementById('actuals-result');
-            panel.style.display = 'block';
+            document.getElementById('actuals-result').style.display = 'block';
             document.getElementById('actuals-result-msg').textContent =
                 `✓ ${data.message}  (${data.products_updated} products updated)`;
 
@@ -1161,57 +2002,196 @@
                     <td style="font-weight:600;">${r.name}</td>
                     <td>${r.mu?.toFixed(2)}</td>
                     <td>${r.sigma?.toFixed(2)}</td>
-                    <td class="q-value">${r.q_star}</td>
+                    <td class="q-base" style="font-family:'Poppins',sans-serif;font-weight:700;color:var(--gold-bright);">${r.q_star}</td>
                 </tr>
             `).join('');
         }
 
-        // ===== DAILY SALES MONITOR TAB =====
-        async function loadDailySales() {
+        // ===== DAILY SALES MONITOR =====
+        let _monitorTs = 0;
+        async function loadDailySales(force = false) {
+            if (!force && Date.now() - _monitorTs < 30000) return;
+            _monitorTs = Date.now();
             const cardsEl = document.getElementById('monitor-cards');
-            cardsEl.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:0.75rem;">Loading sales data…</p></div>';
+            cardsEl.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:.75rem;">Loading sales data…</p></div>';
             try {
                 const res  = await fetch(`${API}/api/daily-sales`);
                 const data = await res.json();
                 renderDailySales(data.daily || []);
             } catch (e) {
-                cardsEl.innerHTML = '<div class="empty-state"><p style="color:var(--accent-crimson);">Failed to load — check server connection.</p></div>';
+                cardsEl.innerHTML = '<div class="empty-state"><p style="color:var(--down);">Failed to load. Check server connection.</p></div>';
             }
         }
 
         function renderDailySales(daily) {
             const cardsEl = document.getElementById('monitor-cards');
             const summary = document.getElementById('monitor-summary');
+            const chartContainer = document.getElementById('monitor-chart-container');
 
             if (!daily || daily.length === 0) {
-                cardsEl.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon" aria-hidden="true">📈</div>
-                        <p>No post-flight actuals uploaded yet.<br>
-                           Upload actual sales CSVs in the "Post-Flight Actuals" tab.</p>
-                    </div>`;
+                cardsEl.innerHTML = `<div class="empty-state"><div class="icon" aria-hidden="true">📈</div><p>No post-flight actuals uploaded yet.<br>Upload actual sales CSVs in the "Post-Flight Actuals" tab.</p></div>`;
                 summary.style.display = 'none';
+                chartContainer.style.display = 'none';
+                document.getElementById('btn-toggle-details').style.display = 'none';
+                if (monitorChart) {
+                    monitorChart.destroy();
+                    monitorChart = null;
+                }
                 return;
             }
+
+            document.getElementById('btn-toggle-details').style.display = '';
 
             const totalUnits   = daily.reduce((s, d) => s + d.total_units,   0);
             const totalRevenue = daily.reduce((s, d) => s + d.total_revenue,  0);
             document.getElementById('mon-days').textContent    = daily.length;
             document.getElementById('mon-units').textContent   = totalUnits.toLocaleString();
-            document.getElementById('mon-revenue').textContent =
-                '฿' + totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            document.getElementById('mon-revenue').textContent = '฿' + totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
             summary.style.display = 'grid';
+
+            // Render Chart.js line chart showing trends
+            chartContainer.style.display = 'block';
+            const chartLabels = daily.map(d => d.date);
+            const chartSoldData = daily.map(d => d.total_units);
+            const chartCateredData = daily.map(d => d.products.reduce((s, p) => s + (p.open_qty || 0), 0));
+            const chartWastedData = daily.map(d => d.products.reduce((s, p) => s + (p.waste_qty || 0), 0));
+
+            if (monitorChart) {
+                monitorChart.destroy();
+            }
+
+            const ctx = document.getElementById('monitor-chart').getContext('2d');
+            monitorChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Total Units Sold',
+                            data: chartSoldData,
+                            borderColor: '#36c98a', // --up green
+                            backgroundColor: 'rgba(54,201,138,0.1)',
+                            tension: 0.18,
+                            fill: true,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Total Catered Load',
+                            data: chartCateredData,
+                            borderColor: '#E3AE45', // --gold
+                            backgroundColor: 'transparent',
+                            borderDash: [4, 4],
+                            tension: 0.18,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Total Physical Wastage',
+                            data: chartWastedData,
+                            borderColor: '#ff6b6b', // --down red
+                            backgroundColor: 'rgba(255,107,107,0.08)',
+                            tension: 0.18,
+                            fill: true,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#cdbfb9', // --text-2
+                                font: {
+                                    family: "'IBM Plex Sans', sans-serif",
+                                    size: 11,
+                                    weight: '600'
+                                },
+                                padding: 14
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(26, 18, 19, 0.95)',
+                            borderColor: 'rgba(255, 255, 255, 0.16)',
+                            borderWidth: 1,
+                            titleColor: '#F6EFEA',
+                            bodyColor: '#cdbfb9',
+                            bodySpacing: 5,
+                            padding: 10,
+                            bodyFont: {
+                                family: "'IBM Plex Sans', sans-serif",
+                                size: 12
+                            },
+                            titleFont: {
+                                family: "'Poppins', sans-serif",
+                                size: 12,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#9a8983', // --text-muted
+                                font: {
+                                    family: "'IBM Plex Sans', sans-serif",
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#9a8983', // --text-muted
+                                font: {
+                                    family: "'IBM Plex Sans', sans-serif",
+                                    size: 11
+                                }
+                            },
+                            suggestedMin: 0
+                        }
+                    }
+                }
+            });
 
             cardsEl.innerHTML = daily.map(day => {
                 const maxUnits = Math.max(...day.products.map(p => p.units), 1);
-                const bars = day.products.slice(0, 8).map(p => {
+                const bars = day.products.slice(0, 12).map(p => {
                     const pct = Math.round((p.units / maxUnits) * 100);
-                    return `<div class="bar-row">
-                        <div class="bar-label" title="${p.name}">${p.name}</div>
-                        <div class="bar-track">
-                            <div class="bar-fill" style="width:${pct}%"></div>
+                    const openQty = p.open_qty || 0;
+                    const wasteQty = p.waste_qty || 0;
+                    
+                    const wastageDetails = openQty > 0
+                        ? `<div class="bar-details">
+                            <span>Catered Load: <b style="color: var(--gold-bright);">${openQty}</b></span>
+                            <span>Actual Waste: <b style="color: var(--down);">${wasteQty}</b></span>
+                            <span>Sell-Through: <b style="color: var(--up);">${Math.round((p.units / openQty) * 100)}%</b></span>
+                           </div>`
+                        : `<div class="bar-details">
+                            <span>No wastage record uploaded for this day</span>
+                           </div>`;
+
+                    return `<div class="bar-container">
+                        <div class="bar-row">
+                            <div class="bar-label" title="${p.name}">${p.name}</div>
+                            <div class="bar-track"><div class="bar-fill" data-scale="${pct / 100}"></div></div>
+                            <div class="bar-val">${p.units} sold</div>
                         </div>
-                        <div class="bar-val">${p.units}</div>
+                        ${wastageDetails}
                     </div>`;
                 }).join('');
 
@@ -1219,29 +2199,171 @@
                     <div class="day-header">
                         <div class="day-date">📅 ${day.date}</div>
                         <div class="day-totals">
-                            <span class="day-total-pill">${day.total_units.toLocaleString()} units</span>
-                            <span class="day-total-pill rev">฿${day.total_revenue.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+                            <span class="day-total-pill units">${day.total_units.toLocaleString()} units sold</span>
+                            <span class="day-total-pill rev">฿${day.total_revenue.toLocaleString(undefined, {maximumFractionDigits:0})}</span>
                         </div>
                     </div>
                     ${bars}
                 </div>`;
             }).join('');
+            requestAnimationFrame(() => {
+                cardsEl.querySelectorAll('.bar-fill').forEach(el => {
+                    el.style.transform = `scaleX(${el.dataset.scale})`;
+                });
+            });
         }
 
-        // ===== ADD ITEM MODAL =====
+        // ===== MINIMIZE/COLLAPSE DAILY DETAILS =====
+        document.getElementById('btn-toggle-details').addEventListener('click', () => {
+            const cardsEl = document.getElementById('monitor-cards');
+            const btn = document.getElementById('btn-toggle-details');
+            if (cardsEl.style.display === 'none') {
+                cardsEl.style.display = '';
+                btn.setAttribute('aria-expanded', 'true');
+                btn.innerHTML = 'Hide Daily Details ▴';
+            } else {
+                cardsEl.style.display = 'none';
+                btn.setAttribute('aria-expanded', 'false');
+                btn.innerHTML = 'Show Daily Details ▾';
+            }
+        });
+
+        // ===== ADD/EDIT ITEM INLINE =====
         document.getElementById('btn-add-item').addEventListener('click', () => {
-            document.getElementById('modal-overlay').classList.add('active');
-            document.getElementById('new-name').focus();
+            isAddingInline = true;
+            editingOriginalCode = ''; // cancel editing when adding
+            renderMenu();
+            document.getElementById('add-name')?.focus();
         });
-        document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
-        document.getElementById('modal-overlay').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeModal();
+
+        function cancelInlineAdd() {
+            isAddingInline = false;
+            renderMenu();
+        }
+
+        async function saveInlineAdd() {
+            const name = document.getElementById('add-name').value.trim();
+            const code = document.getElementById('add-code').value.trim();
+            const priceVal = document.getElementById('add-price').value;
+            const costVal = document.getElementById('add-cost').value;
+            const proxy_code = document.getElementById('add-proxy').value || null;
+
+            const errorEl = document.getElementById('inline-add-error');
+            if (errorEl) {
+                errorEl.style.display = 'none';
+                errorEl.textContent = '';
+            }
+
+            if (!name || !code || !priceVal || !costVal) {
+                if (errorEl) {
+                    errorEl.textContent = 'All fields are required';
+                    errorEl.style.display = 'block';
+                }
+                return;
+            }
+
+            const price = parseFloat(priceVal);
+            const cost = parseFloat(costVal);
+
+            if (isNaN(price) || isNaN(cost)) {
+                if (errorEl) {
+                    errorEl.textContent = 'Price and cost must be numbers';
+                    errorEl.style.display = 'block';
+                }
+                return;
+            }
+
+            const payload = {
+                name: name,
+                code: code,
+                price: price,
+                cost: cost,
+                proxy_code: proxy_code
+            };
+
+            try {
+                const res = await fetch(`${API}/api/menu/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    if (errorEl) {
+                        errorEl.textContent = err.error || `Server error ${res.status}`;
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+                isAddingInline = false;
+                await loadMenu();
+            } catch (e) {
+                console.error('Add item failed:', e);
+                if (errorEl) {
+                    errorEl.textContent = 'Connection error';
+                    errorEl.style.display = 'block';
+                }
+            }
+        }
+        document.addEventListener('keydown', e => {
+            const modalOpen = document.getElementById('modal-overlay').classList.contains('active');
+
+            // Ctrl+Enter / Cmd+Enter: trigger the primary action on the active tab
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !modalOpen) {
+                e.preventDefault();
+                const activeTab = document.querySelector('.tab-btn.active');
+                if (activeTab) {
+                    if (activeTab.id === 'tab-btn-forecast') {
+                        const btn = document.getElementById('btn-forecast');
+                        if (btn && !btn.disabled) btn.click();
+                    } else if (activeTab.id === 'tab-btn-actuals') {
+                        const btn = document.getElementById('btn-submit-actuals');
+                        if (btn && !btn.disabled) btn.click();
+                    }
+                }
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                if (modalOpen) {
+                    closeModal();
+                    return;
+                }
+                // Esc clears inputs depending on which tab is currently active
+                const activeTab = document.querySelector('.tab-btn.active');
+                if (activeTab) {
+                    const tabId = activeTab.id;
+                    if (tabId === 'tab-btn-forecast') {
+                        const btnClearForecast = document.getElementById('btn-clear-forecast');
+                        if (btnClearForecast) btnClearForecast.click();
+                    } else if (tabId === 'tab-btn-actuals') {
+                        const btnClearActuals = document.getElementById('btn-clear-actuals');
+                        if (btnClearActuals) btnClearActuals.click();
+                    }
+                }
+            }
+            if (e.key === 'Tab' && modalOpen) {
+                const modal = document.querySelector('.modal');
+                const focusable = Array.from(modal.querySelectorAll(
+                    'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                ));
+                if (!focusable.length) return;
+                const first = focusable[0], last = focusable[focusable.length - 1];
+                if (e.shiftKey) {
+                    if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+                } else {
+                    if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+                }
+            }
         });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
         function closeModal() {
             document.getElementById('modal-overlay').classList.remove('active');
             document.getElementById('form-add-item').reset();
+            clearInlineError('modal-error');
+            modalMode = 'add';
+            editingOriginalCode = '';
+            document.getElementById('btn-add-item')?.focus();
         }
 
         document.getElementById('form-add-item').addEventListener('submit', async e => {
@@ -1254,23 +2376,44 @@
                 cost:       parseFloat(formData.get('cost')),
                 proxy_code: formData.get('proxy_code') || null
             };
+            
+            const url = modalMode === 'edit' ? `${API}/api/menu/edit` : `${API}/api/menu/add`;
+            if (modalMode === 'edit') {
+                payload.original_code = editingOriginalCode;
+            }
+            
             try {
-                const res = await fetch(`${API}/api/menu/add`, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 if (!res.ok) {
                     const err = await res.json();
-                    alert('Failed to add item: ' + (err.error || `Server error ${res.status}`));
+                    const actionWord = modalMode === 'edit' ? 'update' : 'add';
+                    showInlineError('modal-error', `Failed to ${actionWord} item: ` + (err.error || `Server error ${res.status}`));
                     return;
                 }
                 closeModal();
                 await loadMenu();
-            } catch (e) { console.error('Add item failed:', e); }
+            } catch (e) {
+                console.error(`${modalMode === 'edit' ? 'Edit' : 'Add'} item failed:`, e);
+            }
         });
 
         // ===== INIT =====
+        function initTooltips(root = document) {
+            root.querySelectorAll('.tooltip-help:not([role])').forEach(el => {
+                el.setAttribute('tabindex', '0');
+                el.setAttribute('role', 'button');
+                el.setAttribute('aria-label', 'Help: ' + el.dataset.tip);
+            });
+        }
+        initTooltips();
+
+        // Platform-aware keyboard shortcut badges
+        document.querySelectorAll('.btn kbd').forEach(el => { el.textContent = KBD_HINT; });
+
         loadMenu();
     </script>
 </body>

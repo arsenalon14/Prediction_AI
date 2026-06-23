@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the AI Calculates Q* — TAA Executive Briefing</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* === THEME === */
+:root {
+  --bg: #120c0c;
+  --panel: #1e1213;
+  --panel-2: #261718;
+  --red: #ED1C24;
+  --red-dark: #7a0f12;
+  --gold: #E3AE45;
+  --gold-bright: #F6E2B0;
+  --orange: #F2602A;
+  --text: #F6F0E8;
+  --text-2: #cdb8b8;
+  --text-muted: #8a6464;
+  --line: rgba(255,255,255,0.07);
+  --sunrise: linear-gradient(90deg,#7a0f12 0%,#ED1C24 30%,#F2602A 55%,#E3AE45 80%,#F6E2B0 100%);
+  --stage-bg: #120c0c;
+  --slide-bg: #120c0c;
+}
+
+/* === RESET === */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+/* === VIEWPORT BASE (mandatory) === */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000);}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000);}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff);}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#120c0c);}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+img,video,canvas,svg{max-width:100%;max-height:100%;}
+.deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000;}
+@media print{html,body{width:1920px;height:auto;overflow:visible;}.deck-viewport{position:static;overflow:visible;}.deck-stage{position:static;width:auto;height:auto;transform:none!important;}.slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;}.slide:last-child{break-after:auto;}.deck-controls{display:none!important;}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.2s!important;}}
+
+/* === TYPOGRAPHY === */
+body{font-family:'IBM Plex Sans',sans-serif;color:var(--text);}
+
+/* === ANIMATIONS === */
+@keyframes fadeUp{from{opacity:0;transform:translateY(36px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1);}
+.slide.visible .reveal{opacity:1;transform:translateY(0);}
+
+/* === SHARED === */
+.sunrise-stripe{position:absolute;top:0;left:0;width:100%;height:5px;background:var(--sunrise);z-index:10;}
+.slide-num{position:absolute;bottom:36px;right:72px;font-family:'Poppins',sans-serif;font-size:17px;font-weight:600;color:var(--text-muted);letter-spacing:.12em;z-index:10;}
+.gold-label{font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.red-label{font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);margin-bottom:14px;}
+.slide-heading{font-family:'Poppins',sans-serif;font-weight:800;font-size:52px;color:var(--text);letter-spacing:-.02em;line-height:1.06;}
+.slide-sub{font-family:'IBM Plex Sans',sans-serif;font-weight:300;font-size:24px;color:var(--text-2);margin-top:10px;line-height:1.4;}
+
+/* === SLIDE 1 — TITLE === */
+.s-title{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.title-glow-a{position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(237,28,36,.12),transparent 70%);top:-160px;left:-160px;pointer-events:none;}
+.title-glow-b{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(227,174,69,.08),transparent 70%);bottom:-80px;right:80px;pointer-events:none;}
+.aa-mark{width:130px;height:52px;display:block;margin-bottom:48px;}
+.title-main{font-family:'Poppins',sans-serif;font-weight:900;font-size:96px;line-height:1;text-align:center;color:var(--text);letter-spacing:-.03em;}
+.title-main em{font-style:normal;background:var(--sunrise);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.title-sub{font-family:'IBM Plex Sans',sans-serif;font-weight:300;font-size:32px;color:var(--text-2);margin-top:26px;letter-spacing:.02em;}
+.title-tags{display:flex;gap:28px;margin-top:52px;}
+.title-tag{padding:11px 24px;border:1px solid rgba(227,174,69,.28);border-radius:40px;font-family:'IBM Plex Sans',sans-serif;font-size:17px;color:var(--gold);letter-spacing:.03em;}
+
+/* === SLIDE 2 — PROBLEM === */
+.s-problem{}
+.prob-header{position:absolute;top:68px;left:80px;right:80px;}
+.prob-stats{position:absolute;top:230px;left:80px;right:80px;display:flex;gap:40px;}
+.stat-card{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:56px 48px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:0;left:0;width:100%;height:4px;}
+.stat-card.red::after{background:var(--red);}
+.stat-card.gold::after{background:var(--gold);}
+.stat-num{font-family:'Poppins',sans-serif;font-weight:900;font-size:108px;line-height:1;letter-spacing:-.04em;}
+.stat-card.red .stat-num{color:var(--red);}
+.stat-card.gold .stat-num{color:var(--gold);}
+.stat-lbl{font-family:'IBM Plex Sans',sans-serif;font-size:24px;color:var(--text-2);margin-top:14px;line-height:1.4;}
+.stat-lbl strong{color:var(--text);}
+.prob-footer{position:absolute;bottom:68px;left:80px;right:80px;padding:32px 44px;background:rgba(237,28,36,.07);border:1px solid rgba(237,28,36,.18);border-radius:14px;}
+.prob-footer p{font-family:'IBM Plex Sans',sans-serif;font-size:25px;color:var(--text-2);line-height:1.5;}
+.prob-footer strong{color:var(--text);}
+
+/* === SLIDE 3 — PIPELINE === */
+.pipe-header{position:absolute;top:68px;left:80px;right:80px;}
+.pipe-flow{position:absolute;top:295px;left:60px;right:60px;display:flex;align-items:flex-start;}
+.pipe-node{flex:1;display:flex;flex-direction:column;align-items:center;gap:14px;}
+.pipe-badge{width:76px;height:76px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:900;font-size:22px;color:#fff;box-shadow:0 0 30px rgba(237,28,36,.25);}
+.pipe-badge.gold-bg{background:var(--gold);color:#120c0c;}
+.pipe-badge.orange-bg{background:var(--orange);}
+.pipe-name{font-family:'Poppins',sans-serif;font-weight:700;font-size:17px;color:var(--gold);text-align:center;letter-spacing:.04em;text-transform:uppercase;}
+.pipe-desc{font-family:'IBM Plex Sans',sans-serif;font-size:15px;color:var(--text-muted);text-align:center;line-height:1.4;max-width:175px;}
+.pipe-arrow{flex:0 0 48px;display:flex;align-items:center;padding-top:20px;color:var(--red-dark);font-size:32px;font-weight:900;}
+.pipe-footer{position:absolute;bottom:64px;left:80px;right:80px;text-align:center;}
+.pipe-footer p{font-family:'IBM Plex Sans',sans-serif;font-size:21px;color:var(--text-muted);}
+
+/* === STEP SLIDES (T1–T7) === */
+.step-wrap{position:absolute;inset:0;display:flex;}
+.step-left{width:500px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 44px;position:relative;overflow:hidden;flex-shrink:0;}
+.step-bg-num{position:absolute;font-family:'Poppins',sans-serif;font-weight:900;font-size:280px;color:rgba(237,28,36,.055);line-height:1;letter-spacing:-.05em;top:50%;left:50%;transform:translate(-50%,-50%);user-select:none;pointer-events:none;white-space:nowrap;}
+.step-badge-wrap{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.step-circle{width:130px;height:130px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:900;font-size:44px;color:#fff;box-shadow:0 0 50px rgba(237,28,36,.28);}
+.step-circle.orange-bg{background:var(--orange);box-shadow:0 0 50px rgba(242,96,42,.25);}
+.step-circle.gold-bg{background:var(--gold);color:#120c0c;box-shadow:0 0 50px rgba(227,174,69,.25);}
+.step-circle.grad-bg{background:linear-gradient(135deg,var(--red),var(--gold));box-shadow:0 0 50px rgba(237,28,36,.2);}
+.step-tname{font-family:'Poppins',sans-serif;font-weight:700;font-size:19px;color:var(--gold);text-align:center;text-transform:uppercase;letter-spacing:.07em;line-height:1.3;}
+.step-dots{position:absolute;bottom:44px;display:flex;gap:9px;}
+.step-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.15);}
+.step-dot.on{background:var(--red);width:24px;border-radius:4px;}
+.step-dot.on-g{background:var(--gold);width:24px;border-radius:4px;}
+
+.step-right{flex:1;padding:62px 72px;display:flex;flex-direction:column;}
+.step-idx{font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;}
+.step-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:50px;color:var(--text);letter-spacing:-.02em;line-height:1.06;margin-bottom:36px;}
+.sblk{padding:26px 30px;border-radius:14px;border-left:4px solid;margin-bottom:22px;}
+.sblk.prob{background:rgba(237,28,36,.06);border-color:var(--red);}
+.sblk.soln{background:rgba(227,174,69,.06);border-color:var(--gold);}
+.sblk.ins{background:rgba(246,226,176,.04);border-color:rgba(246,226,176,.18);}
+.sblk-lbl{font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:9px;}
+.sblk.prob .sblk-lbl{color:var(--red);}
+.sblk.soln .sblk-lbl{color:var(--gold);}
+.sblk.ins .sblk-lbl{color:var(--text-muted);}
+.sblk p{font-family:'IBM Plex Sans',sans-serif;font-size:22px;color:var(--text-2);line-height:1.52;}
+.sblk strong{color:var(--text);font-weight:600;}
+.formula{display:inline-block;font-family:'IBM Plex Mono','Courier New',monospace;font-size:18px;color:var(--gold-bright);background:rgba(0,0,0,.35);padding:6px 14px;border-radius:6px;margin-top:10px;}
+
+/* === SLIDE 12 — RESULTS === */
+.res-header{position:absolute;top:68px;left:80px;right:80px;}
+.res-table{position:absolute;top:220px;left:72px;right:72px;}
+.res-table table{width:100%;border-collapse:collapse;}
+.res-table th{font-family:'Poppins',sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);padding:0 12px 20px 0;text-align:left;border-bottom:1px solid var(--line);}
+.res-table td{padding:24px 12px 24px 0;border-bottom:1px solid var(--line);font-family:'IBM Plex Sans',sans-serif;font-size:24px;color:var(--text-2);vertical-align:middle;}
+.res-table td.prd{font-weight:600;color:var(--text);font-size:22px;}
+.res-table td.num{font-family:'Poppins',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;}
+.res-table td.up{font-family:'Poppins',sans-serif;font-weight:800;color:#4ade80;font-size:26px;}
+.res-table td.loss{color:var(--red);}
+.turnaround{display:inline-block;padding:5px 14px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.28);border-radius:6px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;color:#4ade80;}
+.res-note{position:absolute;bottom:60px;left:80px;right:80px;font-family:'IBM Plex Sans',sans-serif;font-size:20px;color:var(--text-muted);text-align:center;}
+
+/* === SLIDE 13 — COLUMN GUIDE === */
+.guide-header{position:absolute;top:68px;left:80px;right:80px;}
+.col-grid{position:absolute;top:210px;left:72px;right:72px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+.col-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;}
+.col-card-name{font-family:'Poppins',sans-serif;font-weight:800;font-size:21px;color:var(--gold);margin-bottom:6px;}
+.col-card-from{font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:var(--red);font-weight:600;margin-bottom:10px;letter-spacing:.04em;text-transform:uppercase;}
+.col-card-desc{font-family:'IBM Plex Sans',sans-serif;font-size:18px;color:var(--text-2);line-height:1.42;}
+
+/* === SLIDE 14 — WORKFLOW === */
+.wf-header{position:absolute;top:68px;left:80px;right:80px;}
+.wf-cols{position:absolute;top:210px;left:72px;right:72px;display:flex;gap:40px;}
+.wf-col{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:44px;}
+.wf-col-hd{font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;margin-bottom:34px;padding-bottom:20px;border-bottom:1px solid var(--line);}
+.wf-col.pre .wf-col-hd{color:var(--gold);}
+.wf-col.post .wf-col-hd{color:var(--text-2);}
+.wf-step{display:flex;align-items:flex-start;gap:18px;margin-bottom:24px;}
+.wf-num{width:36px;height:36px;border-radius:50%;background:rgba(237,28,36,.18);border:1px solid rgba(237,28,36,.35);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:16px;color:var(--red);flex-shrink:0;margin-top:2px;}
+.wf-step p{font-family:'IBM Plex Sans',sans-serif;font-size:21px;color:var(--text-2);line-height:1.4;}
+.wf-step strong{color:var(--text);font-weight:600;}
+
+/* === NAVIGATION === */
+.nav-bar{position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.05);z-index:2000;}
+.nav-prog{height:100%;background:var(--sunrise);transition:width .4s cubic-bezier(.16,1,.3,1);}
+.nav-dots{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:2000;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.18);cursor:pointer;transition:all .3s ease;}
+.nav-dot.on{background:var(--gold);width:18px;border-radius:3px;}
+.slide{transition:opacity .45s cubic-bezier(.16,1,.3,1);}
+
+/* === LANGUAGE SWITCHER === */
+.lang-th{display:none;}
+html.th .lang-en{display:none!important;}
+html.th p.lang-th,html.th div.lang-th{display:block;}
+html.th span.lang-th{display:inline;}
+html.th .slide,
+html.th .sblk p,
+html.th .wf-step p,
+html.th .slide-sub,
+html.th .stat-lbl,
+html.th .prob-footer p,
+html.th .pipe-footer p,
+html.th .res-note,
+html.th .col-card-desc,
+html.th .pipe-desc{font-family:'Sarabun',sans-serif;}
+html.th .step-title,
+html.th .slide-heading,
+html.th .title-main,
+html.th .wf-col-hd,
+html.th .pipe-name,
+html.th .col-card-name,
+html.th .step-tname,
+html.th .gold-label,
+html.th .red-label,
+html.th .step-idx,
+html.th .sblk-lbl{font-family:'Sarabun',sans-serif;}
+
+.lang-sw{position:fixed;top:16px;right:18px;z-index:9000;display:flex;gap:3px;background:rgba(18,12,12,.92);border:1px solid rgba(227,174,69,.28);border-radius:30px;padding:4px;backdrop-filter:blur(10px);}
+.lang-sw button{padding:5px 18px;border-radius:24px;border:none;background:transparent;font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:background .2s,color .2s;}
+.lang-sw button.active{background:var(--red);color:#fff;}
+
+/* === EDIT === */
+.edit-hz{position:fixed;top:0;left:0;width:80px;height:80px;z-index:10000;}
+.edit-btn{position:fixed;top:14px;left:14px;width:42px;height:42px;border-radius:50%;background:rgba(30,18,19,.92);border:1px solid rgba(227,174,69,.28);color:var(--gold);font-size:17px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s;z-index:10001;display:flex;align-items:center;justify-content:center;}
+.edit-btn.show,.edit-btn.on{opacity:1;pointer-events:auto;}
+.edit-btn.on{background:rgba(237,28,36,.2);border-color:var(--red);}
+[contenteditable]{outline:2px solid rgba(227,174,69,.38);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ═══════════════════════════════ SLIDE 1 — TITLE ═══════════════════════════════ -->
+<section class="slide s-title" id="s0">
+  <div class="sunrise-stripe"></div>
+  <div class="title-glow-a"></div>
+  <div class="title-glow-b"></div>
+
+  <!-- AA Logo -->
+  <svg class="aa-mark reveal" viewBox="0 0 130 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="130" height="52" rx="7" fill="#ED1C24"/>
+    <text x="65" y="38" text-anchor="middle" fill="white" font-family="Arial Black,Impact,sans-serif" font-weight="900" font-size="34" letter-spacing="-1">AA</text>
+  </svg>
+
+  <div class="title-main reveal" style="transition-delay:.15s">
+    <span class="lang-en">HOW THE AI CALCULATES <em>Q*</em></span>
+    <span class="lang-th">AI คำนวณ <em>Q*</em> ได้อย่างไร</span>
+  </div>
+  <div class="title-sub reveal" style="transition-delay:.3s">
+    <span class="lang-en">Optimal Loading Recommendations — Executive Briefing</span>
+    <span class="lang-th">คำแนะนำการโหลดที่เหมาะสมที่สุด — บรีฟสำหรับผู้บริหาร</span>
+  </div>
+
+  <div class="title-tags reveal" style="transition-delay:.45s">
+    <div class="title-tag">
+      <span class="lang-en">DMK → MLE → DMK Route</span>
+      <span class="lang-th">เส้นทาง DMK → MLE → DMK</span>
+    </div>
+    <div class="title-tag">
+      <span class="lang-en">7-Theory Pipeline</span>
+      <span class="lang-th">7 ขั้นตอนทฤษฎี</span>
+    </div>
+    <div class="title-tag">
+      <span class="lang-en">574,957 Training Records</span>
+      <span class="lang-th">574,957 รายการข้อมูลฝึกสอน</span>
+    </div>
+  </div>
+
+  <div class="slide-num">01 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 2 — PROBLEM ═══════════════════════════════ -->
+<section class="slide s-problem" id="s1">
+  <div class="sunrise-stripe"></div>
+  <div class="prob-header">
+    <div class="red-label reveal">
+      <span class="lang-en">The Challenge We Solved</span>
+      <span class="lang-th">ปัญหาที่เราแก้ไข</span>
+    </div>
+    <h2 class="slide-heading reveal" style="transition-delay:.1s">
+      <span class="lang-en">Manual Stocking Was Failing in Both Directions at Once</span>
+      <span class="lang-th">การบรรจุอาหารด้วยมือล้มเหลวทั้งสองทิศทางพร้อมกัน</span>
+    </h2>
+  </div>
+
+  <div class="prob-stats">
+    <div class="stat-card red reveal" style="transition-delay:.2s">
+      <div class="stat-num">65–76%</div>
+      <div class="stat-lbl">
+        <span class="lang-en">of all loaded food was<br><strong>thrown away</strong> at end of each round trip</span>
+        <span class="lang-th">ของอาหารทั้งหมดถูก<strong>ทิ้ง</strong><br>เมื่อสิ้นสุดรอบการเดินทาง</span>
+      </div>
+    </div>
+    <div class="stat-card red reveal" style="transition-delay:.32s">
+      <div class="stat-num">12–20%</div>
+      <div class="stat-lbl">
+        <span class="lang-en"><strong>stockout rate</strong> on best-selling items<br>on the same flights</span>
+        <span class="lang-th"><strong>อัตราสินค้าหมด</strong>บนสินค้าขายดี<br>ในเที่ยวบินเดียวกัน</span>
+      </div>
+    </div>
+    <div class="stat-card gold reveal" style="transition-delay:.44s">
+      <div class="stat-num">835</div>
+      <div class="stat-lbl">
+        <span class="lang-en">pair-route flight dates analyzed<br><strong>2024 – May 2026</strong></span>
+        <span class="lang-th">วันเที่ยวบินคู่ที่วิเคราะห์<br><strong>2567 – พ.ค. 2569</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="prob-footer reveal" style="transition-delay:.6s">
+    <p class="lang-en">In early 2026, the airline was discarding <strong>3 out of every 4 meals</strong> while still running out of its most popular items on the same flights. No manual heuristic can solve both problems simultaneously — a mathematical optimization model was required.</p>
+    <p class="lang-th">ในต้นปี 2569 สายการบินทิ้งอาหาร <strong>3 ใน 4 มื้อ</strong> ขณะที่สินค้ายอดนิยมหมดในเที่ยวบินเดียวกัน ไม่มีสูตรสำเร็จด้วยมือใดที่แก้ปัญหาทั้งสองพร้อมกันได้ — จำเป็นต้องใช้แบบจำลองการเพิ่มประสิทธิภาพทางคณิตศาสตร์</p>
+  </div>
+
+  <div class="slide-num">02 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 3 — PIPELINE OVERVIEW ═══════════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="sunrise-stripe"></div>
+  <div class="pipe-header">
+    <div class="red-label reveal">
+      <span class="lang-en">The Solution</span>
+      <span class="lang-th">วิธีแก้ปัญหา</span>
+    </div>
+    <h2 class="slide-heading reveal" style="transition-delay:.1s">
+      <span class="lang-en">7 Theories — One Optimal Answer (Q*)</span>
+      <span class="lang-th">7 ทฤษฎี — คำตอบที่เหมาะสมหนึ่งเดียว (Q*)</span>
+    </h2>
+    <p class="slide-sub reveal" style="transition-delay:.2s">
+      <span class="lang-en">Each step builds on the previous. Every column in the Q* table is produced by one or more of these theories, running in sequence in under 1 second.</span>
+      <span class="lang-th">แต่ละขั้นตอนต่อยอดจากขั้นก่อน ทุกคอลัมน์ในตาราง Q* ถูกสร้างโดยทฤษฎีหนึ่งหรือมากกว่า ทำงานตามลำดับภายในเวลาน้อยกว่า 1 วินาที</span>
+    </p>
+  </div>
+
+  <div class="pipe-flow">
+    <div class="pipe-node reveal" style="transition-delay:.15s">
+      <div class="pipe-badge">T1</div>
+      <div class="pipe-name"><span class="lang-en">Pair-Route</span><span class="lang-th">คู่เส้นทาง</span></div>
+      <div class="pipe-desc"><span class="lang-en">Combine both flight legs into one clean demand unit</span><span class="lang-th">รวมสองขาบินเป็นหน่วยอุปสงค์เดียวที่สะอาด</span></div>
+    </div>
+    <div class="pipe-arrow reveal" style="transition-delay:.22s">›</div>
+    <div class="pipe-node reveal" style="transition-delay:.3s">
+      <div class="pipe-badge">T2</div>
+      <div class="pipe-name"><span class="lang-en">Un-Censoring</span><span class="lang-th">ปรับแก้การตัด</span></div>
+      <div class="pipe-desc"><span class="lang-en">Recover true demand hidden by stockouts (Tobit MLE)</span><span class="lang-th">กู้อุปสงค์จริงที่ซ่อนอยู่ใต้การสินค้าหมด (Tobit MLE)</span></div>
+    </div>
+    <div class="pipe-arrow reveal" style="transition-delay:.37s">›</div>
+    <div class="pipe-node reveal" style="transition-delay:.45s">
+      <div class="pipe-badge">T3</div>
+      <div class="pipe-name"><span class="lang-en">Cost Model</span><span class="lang-th">โมเดลต้นทุน</span></div>
+      <div class="pipe-desc"><span class="lang-en">Define what over- and under-loading costs the airline</span><span class="lang-th">กำหนดต้นทุนการโหลดน้อยและมากเกินไป</span></div>
+    </div>
+    <div class="pipe-arrow reveal" style="transition-delay:.52s">›</div>
+    <div class="pipe-node reveal" style="transition-delay:.6s">
+      <div class="pipe-badge">T4</div>
+      <div class="pipe-name"><span class="lang-en">Service Level</span><span class="lang-th">ระดับบริการ</span></div>
+      <div class="pipe-desc"><span class="lang-en">Calculate the optimal stockout probability (Critical Fractile)</span><span class="lang-th">คำนวณความน่าจะเป็นที่เหมาะสมของสินค้าขาด</span></div>
+    </div>
+    <div class="pipe-arrow reveal" style="transition-delay:.67s">›</div>
+    <div class="pipe-node reveal" style="transition-delay:.75s">
+      <div class="pipe-badge">T5</div>
+      <div class="pipe-name"><span class="lang-en">Flight Scale</span><span class="lang-th">ปรับตามเที่ยวบิน</span></div>
+      <div class="pipe-desc"><span class="lang-en">Translate per-pax rates to this specific flight's load</span><span class="lang-th">แปลอัตราต่อผู้โดยสารเป็นจำนวนโหลดจริง</span></div>
+    </div>
+    <div class="pipe-arrow reveal" style="transition-delay:.82s">›</div>
+    <div class="pipe-node reveal" style="transition-delay:.9s">
+      <div class="pipe-badge orange-bg">T5b</div>
+      <div class="pipe-name"><span class="lang-en">Demo. Gamma</span><span class="lang-th">แกมมาประชากร</span></div>
+      <div class="pipe-desc"><span class="lang-en">Adjust for this flight's actual nationality mix</span><span class="lang-th">ปรับตามสัดส่วนสัญชาติจริงของเที่ยวบิน</span></div>
+    </div>
+    <div class="pipe-arrow reveal" style="transition-delay:.97s">›</div>
+    <div class="pipe-node reveal" style="transition-delay:1.05s">
+      <div class="pipe-badge gold-bg">T6/7</div>
+      <div class="pipe-name"><span class="lang-en">Learn &amp; Adapt</span><span class="lang-th">เรียนรู้และปรับ</span></div>
+      <div class="pipe-desc"><span class="lang-en">Cold-start new items; refit model after every flight</span><span class="lang-th">เริ่มต้นสินค้าใหม่ ปรับโมเดลหลังทุกเที่ยวบิน</span></div>
+    </div>
+  </div>
+
+  <div class="pipe-footer reveal" style="transition-delay:1.1s">
+    <p class="lang-en">The system runs all 7 steps automatically when you click <strong style="color:var(--gold)">Run Hyper-Personalized Forecast</strong> in the dashboard.</p>
+    <p class="lang-th">ระบบทำงานทั้ง 7 ขั้นตอนอัตโนมัติเมื่อกด <strong style="color:var(--gold)">Run Hyper-Personalized Forecast</strong> บนแดชบอร์ด</p>
+  </div>
+
+  <div class="slide-num">03 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 4 — T1 ═══════════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num">T1</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle">T1</div>
+        <div class="step-tname"><span class="lang-en">Pair-Route<br>Aggregation</span><span class="lang-th">การรวม<br>คู่เส้นทาง</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot on"></div><div class="step-dot"></div><div class="step-dot"></div>
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 1 of 7</span><span class="lang-th">ขั้นตอนที่ 1 จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">Combine Both Flight Legs<br>Into One Clean Unit</span>
+        <span class="lang-th">รวมสองขาบิน<br>เป็นหน่วยเดียวที่สะอาด</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">The Problem It Solves</span><span class="lang-th">ปัญหาที่แก้ไข</span></div>
+        <p class="lang-en">Cabin crew scan food on Flight 175 (outbound DMK→MLE) and Flight 176 (return MLE→DMK), but regularly log sales under the <strong>wrong leg</strong>. Leg-by-leg data is corrupted and completely unusable for forecasting.</p>
+        <p class="lang-th">ลูกเรือสแกนอาหารบนเที่ยวบิน 175 (ขาออก DMK→MLE) และ 176 (ขากลับ MLE→DMK) แต่มักบันทึกยอดขาย<strong>ผิดขา</strong> ข้อมูลแยกตามขาเสียหายและใช้คาดการณ์ไม่ได้</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">For every historical flight date and every product, it adds Flight 175 sales + Flight 176 sales into a single number: the <strong>total sold on the round trip</strong>. Crew scanning errors become mathematically irrelevant.</p>
+        <p class="lang-th">สำหรับทุกวันที่เที่ยวบินในประวัติและทุกสินค้า นำยอดขายเที่ยวบิน 175 + เที่ยวบิน 176 <strong>รวมกัน</strong>เป็นตัวเลขเดียว คือยอดรวมต่อรอบเดินทาง ข้อผิดพลาดของลูกเรือจึงไม่มีผลทางคณิตศาสตร์</p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">Key Insight</span><span class="lang-th">ข้อสรุปสำคัญ</span></div>
+        <p class="lang-en">All food is loaded at Bangkok (DMK) and disposed of at Bangkok on the return. The <strong>round trip — not each leg — is the correct planning unit</strong> for catering decisions.</p>
+        <p class="lang-th">อาหารทั้งหมดบรรจุที่กรุงเทพ (DMK) และทิ้งที่กรุงเทพเมื่อกลับมา <strong>รอบเดินทาง — ไม่ใช่แต่ละขา — คือหน่วยวางแผนที่ถูกต้อง</strong>สำหรับการจัดเตรียมอาหาร</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">04 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 5 — T2 ═══════════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num">T2</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle">T2</div>
+        <div class="step-tname"><span class="lang-en">Demand<br>Un-Censoring</span><span class="lang-th">ปรับแก้<br>การตัดข้อมูล</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot"></div><div class="step-dot on"></div><div class="step-dot"></div>
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 2 of 7</span><span class="lang-th">ขั้นตอนที่ 2 จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">Recover the True Demand<br>Hidden by Stockouts</span>
+        <span class="lang-th">กู้อุปสงค์จริง<br>ที่ถูกซ่อนไว้ด้วยสินค้าหมด</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">The Problem It Solves</span><span class="lang-th">ปัญหาที่แก้ไข</span></div>
+        <p class="lang-en">When food runs out mid-flight, the sales record stops at zero — but passengers were <strong>still hungry</strong>. Raw sales data permanently underestimates true demand. Training on raw sales locks the system into perpetual stockouts.</p>
+        <p class="lang-th">เมื่ออาหารหมดกลางเที่ยวบิน บันทึกยอดขายหยุดที่ศูนย์ — แต่ผู้โดยสาร<strong>ยังต้องการอาหารอยู่</strong> ข้อมูลยอดขายดิบประเมินอุปสงค์จริงต่ำเกินไปถาวร ฝึกโมเดลจากยอดขายดิบจะทำให้สินค้าหมดซ้ำแล้วซ้ำเล่า</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">Using <strong>Tobit Maximum Likelihood Estimation (MLE)</strong>, the code fits a demand curve using both sold-out flights (censored observations) and normal flights together. It recovers the true average demand rate per passenger (<strong>μ_rate</strong>) and variability (<strong>σ_rate</strong>) — separately for each calendar month, using 835 historical pair-route dates.</p>
+        <p class="lang-th">ใช้ <strong>Tobit Maximum Likelihood Estimation (MLE)</strong> โค้ดฟิตเส้นโค้งอุปสงค์จากทั้งเที่ยวบินที่ขายหมด (ข้อมูลถูกตัด) และเที่ยวบินปกติร่วมกัน กู้อัตราอุปสงค์จริงต่อผู้โดยสาร (<strong>μ_rate</strong>) และความผันแปร (<strong>σ_rate</strong>) แยกตามเดือนปฏิทิน โดยใช้ 835 วันคู่เส้นทางในประวัติ</p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">Key Insight</span><span class="lang-th">ข้อสรุปสำคัญ</span></div>
+        <p class="lang-en">The AI reverses-engineers what passengers <em>actually wanted</em>, not just what was sold before the cart ran empty. This is what makes the <strong>True Demand (μ)</strong> column in the Q* table different from raw average sales.</p>
+        <p class="lang-th">AI ย้อนหาว่าผู้โดยสาร<em>ต้องการจริง</em>อะไร ไม่ใช่แค่สิ่งที่ขายได้ก่อนรถเข็นหมด นี่คือสิ่งที่ทำให้คอลัมน์ <strong>อุปสงค์จริง (μ)</strong> แตกต่างจากยอดขายดิบ</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">05 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 6 — T3 ═══════════════════════════════ -->
+<section class="slide" id="s5">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num">T3</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle">T3</div>
+        <div class="step-tname"><span class="lang-en">Newsvendor<br>Cost Model</span><span class="lang-th">โมเดล<br>ต้นทุน</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot on"></div>
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 3 of 7</span><span class="lang-th">ขั้นตอนที่ 3 จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">Define What Each<br>Type of Mistake Costs</span>
+        <span class="lang-th">กำหนดต้นทุน<br>ของแต่ละประเภทข้อผิดพลาด</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">The Question This Step Answers</span><span class="lang-th">คำถามที่ขั้นตอนนี้ตอบ</span></div>
+        <p class="lang-en">Before recommending a loading quantity, the system must know: which mistake is <strong>more expensive</strong> — loading too little (losing a sale) or loading too much (throwing food away)?</p>
+        <p class="lang-th">ก่อนแนะนำปริมาณการโหลด ระบบต้องรู้ว่าข้อผิดพลาดใด<strong>แพงกว่า</strong> — โหลดน้อยเกินไป (เสียยอดขาย) หรือโหลดมากเกินไป (ทิ้งอาหาร)?</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">For each product, it reads the retail price and unit cost, then computes two numbers:<br>
+        <span class="formula">Under-catering cost (C_u) = Price − Cost (lost margin per missed sale)</span>
+        <span class="formula">Over-catering cost (C_o) = Unit cost (food wasted per unsold meal)</span></p>
+        <p class="lang-th">สำหรับแต่ละสินค้า อ่านราคาขายปลีกและต้นทุนต่อหน่วย แล้วคำนวณสองตัวเลข:<br>
+        <span class="formula">ต้นทุนโหลดน้อย (C_u) = ราคา − ต้นทุน (กำไรหายต่อการพลาดขาย)</span>
+        <span class="formula">ต้นทุนโหลดเกิน (C_o) = ต้นทุนต่อหน่วย (อาหารเสียต่อมื้อที่ขายไม่ได้)</span></p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">Key Insight — Basil Chicken Example</span><span class="lang-th">ข้อสรุปสำคัญ — ตัวอย่างไก่กะเพรา</span></div>
+        <p class="lang-en">Loading <strong>too little</strong>: loses <strong>102 THB</strong> per unsold opportunity (150 − 48 THB).<br>
+        Loading <strong>too much</strong>: wastes <strong>48 THB</strong> per discarded meal.<br>
+        Under-catering is <strong>2.1× more expensive</strong> than over-catering — so the model skews toward loading more.</p>
+        <p class="lang-th">โหลด<strong>น้อยเกินไป</strong>: เสียกำไร <strong>102 บาท</strong>ต่อโอกาสขาย (150 − 48 บาท)<br>
+        โหลด<strong>มากเกินไป</strong>: สูญเสีย <strong>48 บาท</strong>ต่อมื้อที่ทิ้ง<br>
+        การโหลดน้อย<strong>แพงกว่า 2.1 เท่า</strong> ดังนั้นโมเดลจึงเอนเอียงให้โหลดมากขึ้น</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">06 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 7 — T4 ═══════════════════════════════ -->
+<section class="slide" id="s6">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num">T4</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle">T4</div>
+        <div class="step-tname"><span class="lang-en">Critical<br>Fractile</span><span class="lang-th">ระดับบริการ<br>วิกฤต</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+        <div class="step-dot on"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 4 of 7</span><span class="lang-th">ขั้นตอนที่ 4 จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">Calculate the Mathematically<br>Optimal Service Level</span>
+        <span class="lang-th">คำนวณระดับบริการ<br>ที่เหมาะสมทางคณิตศาสตร์</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">What This Step Decides</span><span class="lang-th">สิ่งที่ขั้นตอนนี้ตัดสิน</span></div>
+        <p class="lang-en">Given the two costs from Step 3, what is the <strong>optimal probability of not running out</strong>? Loading for 100% certainty means massive waste. Loading for 50% means constant stockouts. The correct balance is mathematically derivable.</p>
+        <p class="lang-th">จากต้นทุนสองแบบในขั้นที่ 3 ความน่าจะเป็นที่เหมาะสมในการ<strong>ไม่สินค้าขาด</strong>คือเท่าไร? โหลดเพื่อ 100% แน่นอนหมายถึงสูญเสียมาก โหลดเพื่อ 50% หมายถึงสินค้าขาดตลอด ส่วนที่สมดุลคำนวณได้ทางคณิตศาสตร์</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">It divides the under-catering cost by the total of both costs:<br>
+        <span class="formula">F* (Service Level) = C_u ÷ (C_u + C_o) = (Price − Cost) ÷ Price</span><br>
+        This percentage appears in the <strong>Service Level (F*)</strong> column as a gold bar. The code then converts it to a z-score — the safety stock buffer above the mean demand.</p>
+        <p class="lang-th">หารต้นทุนโหลดน้อยด้วยต้นทุนรวม:<br>
+        <span class="formula">F* (ระดับบริการ) = C_u ÷ (C_u + C_o) = (ราคา − ต้นทุน) ÷ ราคา</span><br>
+        เปอร์เซ็นต์นี้แสดงในคอลัมน์ <strong>ระดับบริการ (F*)</strong> เป็นแถบสีทอง แล้วแปลงเป็น z-score — บัฟเฟอร์สต๊อกความปลอดภัยเหนือค่าเฉลี่ยอุปสงค์</p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">Key Insight — Range Across the Menu</span><span class="lang-th">ข้อสรุปสำคัญ — ช่วงตลอดเมนู</span></div>
+        <p class="lang-en">Service levels range from <strong>51%</strong> (Burnt Cheesecake, lower margin) to <strong>68.5%</strong> (Green Curry, highest margin). Higher margin = system recommends more safety stock to capture more of those sales.</p>
+        <p class="lang-th">ระดับบริการอยู่ในช่วง <strong>51%</strong> (เค้กชีสไหม้, กำไรต่ำ) ถึง <strong>68.5%</strong> (แกงเขียวหวาน, กำไรสูงสุด) กำไรสูงกว่า = ระบบแนะนำสต๊อกความปลอดภัยมากขึ้นเพื่อดักจับยอดขาย</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">07 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 8 — T5 ═══════════════════════════════ -->
+<section class="slide" id="s7">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num">T5</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle">T5</div>
+        <div class="step-tname"><span class="lang-en">Flight-Specific<br>Scaling</span><span class="lang-th">ปรับตาม<br>เที่ยวบินจริง</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+        <div class="step-dot"></div><div class="step-dot on"></div><div class="step-dot"></div><div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 5 of 7</span><span class="lang-th">ขั้นตอนที่ 5 จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">Scale the Demand Rate<br>to This Specific Flight</span>
+        <span class="lang-th">ปรับอัตราอุปสงค์<br>ให้เข้ากับเที่ยวบินนี้โดยเฉพาะ</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">The Requirement</span><span class="lang-th">ข้อกำหนด</span></div>
+        <p class="lang-en">Steps 2–4 produce a demand <em>rate per passenger</em>. The Q* table must show a specific number of <strong>items to physically load</strong>. This requires knowing how many passengers on this specific flight will buy from the cart.</p>
+        <p class="lang-th">ขั้นที่ 2–4 สร้างอัตราอุปสงค์<em>ต่อผู้โดยสาร</em> ตาราง Q* ต้องแสดงจำนวน<strong>สินค้าที่โหลดจริง</strong> ซึ่งต้องรู้ว่าผู้โดยสารกี่คนในเที่ยวบินนี้จะซื้อจากรถเข็น</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">It reads the <strong>uploaded passenger manifest</strong> and computes Net BoB (passengers who will buy on-board):<br>
+        <span class="formula">Net BoB = Total pax boarded − Pre-booked meal pax</span>
+        <span class="formula">Baseline Q* = (μ_rate × Net BoB) + z × (σ_rate × Net BoB)</span></p>
+        <p class="lang-th">อ่าน<strong>รายชื่อผู้โดยสารที่อัปโหลด</strong> และคำนวณ Net BoB (ผู้โดยสารที่จะซื้อบนเครื่อง):<br>
+        <span class="formula">Net BoB = ผู้โดยสารที่ขึ้นเครื่อง − ผู้โดยสารที่จองอาหารล่วงหน้า</span>
+        <span class="formula">Baseline Q* = (μ_rate × Net BoB) + z × (σ_rate × Net BoB)</span></p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">Worked Example — Boba Tea, May Flight</span><span class="lang-th">ตัวอย่างจริง — ชาไทยบีบ้า เดือนพฤษภาคม</span></div>
+        <p class="lang-en">173 net BoB passengers. μ_rate for May = 0.107 units/pax.<br>
+        Expected demand = 0.107 × 173 = <strong>18.5 units</strong>.<br>
+        With z safety buffer → <strong>Baseline Q* = 21</strong>. That's the number in the table.</p>
+        <p class="lang-th">ผู้โดยสาร Net BoB 173 คน μ_rate เดือนพฤษภาคม = 0.107 หน่วย/คน<br>
+        อุปสงค์ที่คาดหวัง = 0.107 × 173 = <strong>18.5 หน่วย</strong><br>
+        รวม z safety buffer → <strong>Baseline Q* = 21</strong> นั่นคือตัวเลขในตาราง</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">08 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 9 — T5b ═══════════════════════════════ -->
+<section class="slide" id="s8">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num" style="color:rgba(242,96,42,.07)">T5b</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle orange-bg">T5b</div>
+        <div class="step-tname"><span class="lang-en">Demographic<br>Gamma (γ)</span><span class="lang-th">แกมมา<br>ประชากร (γ)</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+        <div class="step-dot"></div><div class="step-dot on" style="background:var(--orange)"></div>
+        <div class="step-dot"></div><div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 5b of 7</span><span class="lang-th">ขั้นตอนที่ 5b จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">Adjust for Who Is<br>Actually on This Flight</span>
+        <span class="lang-th">ปรับตามผู้โดยสาร<br>ที่อยู่จริงบนเที่ยวบินนี้</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">The Refinement</span><span class="lang-th">การปรับปรุงเพิ่มเติม</span></div>
+        <p class="lang-en">Step 5's Baseline Q* uses the <em>historical average</em> nationality mix for that calendar month. But each specific flight may have a very different composition — and different nationalities buy very different items.</p>
+        <p class="lang-th">Baseline Q* ของขั้นที่ 5 ใช้สัดส่วนสัญชาติ<em>ค่าเฉลี่ยประวัติ</em>ของเดือนนั้น แต่แต่ละเที่ยวบินอาจมีองค์ประกอบต่างกันมาก และสัญชาติต่างกันซื้อสินค้าต่างกันมาก</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">It reads the actual upcoming manifest nationality counts and computes a multiplier per item:<br>
+        <span class="formula">γ = This flight's predicted demand rate ÷ Historical monthly average rate</span>
+        <span class="formula">Adjusted Q* = ⌈ Baseline Q* × γ ⌉</span>
+        γ is learned from 248,752 historical passenger seat records joined to 177,173 sales transactions.</p>
+        <p class="lang-th">อ่านจำนวนสัญชาติจากรายชื่อผู้โดยสารจริง แล้วคำนวณตัวคูณต่อสินค้า:<br>
+        <span class="formula">γ = อัตราอุปสงค์คาดการณ์เที่ยวบินนี้ ÷ อัตราเฉลี่ยรายเดือนประวัติ</span>
+        <span class="formula">Adjusted Q* = ⌈ Baseline Q* × γ ⌉</span>
+        γ เรียนรู้จากข้อมูลที่นั่ง 248,752 รายการ จับคู่กับยอดขาย 177,173 รายการ</p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">Key Example</span><span class="lang-th">ตัวอย่างสำคัญ</span></div>
+        <p class="lang-en">July average: 54% Chinese passengers (heavy Teriyaki buyers). If a July flight has <strong>0% Chinese</strong>, γ ≈ 0.40 for Teriyaki → load 40% less than baseline. The <strong>γ=0.82</strong> tag visible in the Q* table is this multiplier.</p>
+        <p class="lang-th">ค่าเฉลี่ยกรกฎาคม: ผู้โดยสารจีน 54% (ซื้อเทอริยากิมาก) หากเที่ยวบินกรกฎาคมมี<strong>จีน 0%</strong> γ ≈ 0.40 สำหรับเทอริยากิ → โหลดน้อยกว่า baseline 40% แท็ก <strong>γ=0.82</strong> ในตาราง Q* คือตัวคูณนี้</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">09 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 10 — T6 ═══════════════════════════════ -->
+<section class="slide" id="s9">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num" style="color:rgba(227,174,69,.06)">T6</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle gold-bg">T6</div>
+        <div class="step-tname"><span class="lang-en">Cold Start<br>Substitution</span><span class="lang-th">เริ่มต้นสินค้า<br>ใหม่ (Cold Start)</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot on-g"></div><div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 6 of 7</span><span class="lang-th">ขั้นตอนที่ 6 จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">Handle Brand-New Menu Items<br>With Zero Sales History</span>
+        <span class="lang-th">จัดการสินค้าเมนูใหม่<br>ที่ยังไม่มีประวัติยอดขาย</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">The Challenge</span><span class="lang-th">ความท้าทาย</span></div>
+        <p class="lang-en">When the airline introduces a new seasonal item, there is <strong>exactly zero historical data</strong> for it. Steps 2–5 cannot run with no observations. Without a recommendation, the operations team guesses — creating waste or stockouts from Day 1.</p>
+        <p class="lang-th">เมื่อสายการบินเปิดตัวสินค้าฤดูกาลใหม่ จะมีข้อมูลประวัติ<strong>เป็นศูนย์</strong> ขั้นที่ 2–5 ทำงานไม่ได้หากไม่มีข้อมูล ทีมปฏิบัติการจะเดา — สร้างของเหลือหรือสินค้าหมดตั้งแต่วันแรก</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">It matches the new item to the most similar <strong>established item (the "proxy")</strong> by protein type, flavor profile, and price bracket. It borrows that proxy's μ_rate and σ_rate, then runs Steps 3–5 with the new item's own price and cost. The proxy is dropped entirely by Day 8 of real sales.</p>
+        <p class="lang-th">จับคู่สินค้าใหม่กับ<strong>สินค้าที่มีข้อมูล (proxy)</strong> ที่ใกล้เคียงที่สุดตามโปรตีน รสชาติ และราคา ยืม μ_rate และ σ_rate ของ proxy แล้วทำขั้นที่ 3–5 ด้วยราคาและต้นทุนของสินค้าใหม่เอง Proxy ถูกยกเลิกเมื่อมียอดขายจริงครบ 8 วัน</p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">How to Identify It in the Table</span><span class="lang-th">วิธีระบุในตาราง</span></div>
+        <p class="lang-en">New items show <strong>"T6:Substitution(proxy=...)"</strong> in the Theories column instead of the normal T2 Tobit tag. This flags to the operator that the recommendation is proxy-based, not yet fully data-driven.</p>
+        <p class="lang-th">สินค้าใหม่จะแสดง <strong>"T6:Substitution(proxy=...)"</strong> ในคอลัมน์ Theories แทนแท็ก T2 Tobit ปกติ แจ้งผู้ปฏิบัติการว่าคำแนะนำนี้อ้างอิง proxy ยังไม่ใช่ข้อมูลจริงครบถ้วน</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">10 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 11 — T7 ═══════════════════════════════ -->
+<section class="slide" id="s10">
+  <div class="sunrise-stripe"></div>
+  <div class="step-wrap">
+    <div class="step-left">
+      <div class="step-bg-num">T7</div>
+      <div class="step-badge-wrap reveal">
+        <div class="step-circle grad-bg">T7</div>
+        <div class="step-tname"><span class="lang-en">MLE Refit<br>After Every Flight</span><span class="lang-th">MLE ปรับใหม่<br>หลังทุกเที่ยวบิน</span></div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+        <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+        <div class="step-dot on-g"></div>
+      </div>
+    </div>
+    <div class="step-right">
+      <div class="step-idx reveal"><span class="lang-en">Step 7 of 7</span><span class="lang-th">ขั้นตอนที่ 7 จาก 7</span></div>
+      <div class="step-title reveal" style="transition-delay:.1s">
+        <span class="lang-en">The System Learns After<br>Every Single Flight</span>
+        <span class="lang-th">ระบบเรียนรู้หลัง<br>ทุกเที่ยวบิน</span>
+      </div>
+      <div class="sblk prob reveal" style="transition-delay:.2s">
+        <div class="sblk-lbl"><span class="lang-en">Why This Step Exists</span><span class="lang-th">ทำไมขั้นตอนนี้จึงมีอยู่</span></div>
+        <p class="lang-en">A model trained only on historical data slowly becomes stale. Passenger preferences shift, new items mature, seasonal patterns evolve year to year. Without a feedback loop, Q* recommendations would drift away from current reality.</p>
+        <p class="lang-th">โมเดลที่ฝึกจากข้อมูลประวัติเท่านั้นจะค่อย ๆ ล้าสมัย ความชอบของผู้โดยสารเปลี่ยน สินค้าใหม่เติบโต รูปแบบฤดูกาลพัฒนาไปในแต่ละปี หากไม่มีวงรอบข้อมูลย้อนกลับ ค่า Q* จะค่อย ๆ เบี่ยงออกจากความเป็นจริง</p>
+      </div>
+      <div class="sblk soln reveal" style="transition-delay:.32s">
+        <div class="sblk-lbl"><span class="lang-en">What the Code Does</span><span class="lang-th">สิ่งที่โค้ดทำ</span></div>
+        <p class="lang-en">After a flight lands, the operations team uploads <strong>three files</strong>: actual SaleALL CSV, Wastage CSV, and final boarded passenger manifest. The system appends these permanently and <strong>re-runs the full Tobit MLE</strong> (Step 2) on all combined data. The next forecast uses the updated μ_rate and σ_rate immediately.</p>
+        <p class="lang-th">หลังเที่ยวบินลงจอด ทีมปฏิบัติการอัปโหลด<strong>สามไฟล์</strong>: SaleALL CSV จริง, Wastage CSV, และรายชื่อผู้โดยสารขึ้นเครื่องจริง ระบบบันทึกถาวรและ<strong>รัน Tobit MLE ใหม่</strong> (ขั้นที่ 2) บนข้อมูลรวมทั้งหมด การคาดการณ์ถัดไปใช้ μ_rate และ σ_rate ที่อัปเดตแล้วทันที</p>
+      </div>
+      <div class="sblk ins reveal" style="transition-delay:.44s">
+        <div class="sblk-lbl"><span class="lang-en">Key Insight</span><span class="lang-th">ข้อสรุปสำคัญ</span></div>
+        <p class="lang-en">With 140+ historical records per product, each new flight shifts the demand estimate by a small fraction. The system is <strong>self-correcting</strong> — it gets marginally smarter after every flight, automatically, with no manual model updates required.</p>
+        <p class="lang-th">ด้วยข้อมูลประวัติกว่า 140 รายการต่อสินค้า แต่ละเที่ยวบินใหม่ปรับค่าอุปสงค์เล็กน้อย ระบบ<strong>แก้ไขตัวเอง</strong> — ฉลาดขึ้นเล็กน้อยหลังทุกเที่ยวบิน โดยอัตโนมัติ ไม่ต้องอัปเดตโมเดลด้วยมือ</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">11 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 12 — RESULTS ═══════════════════════════════ -->
+<section class="slide" id="s11">
+  <div class="sunrise-stripe"></div>
+  <div class="res-header">
+    <div class="gold-label reveal">
+      <span class="lang-en">The Financial Impact</span>
+      <span class="lang-th">ผลกระทบทางการเงิน</span>
+    </div>
+    <h2 class="slide-heading reveal" style="transition-delay:.1s">
+      <span class="lang-en">AI Optimization vs. Manual Heuristics — Annualized Profit</span>
+      <span class="lang-th">AI เพิ่มประสิทธิภาพ vs. การคาดเดาด้วยมือ — กำไรประจำปี</span>
+    </h2>
+  </div>
+
+  <div class="res-table reveal" style="transition-delay:.25s">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34%"><span class="lang-en">Product</span><span class="lang-th">สินค้า</span></th>
+          <th style="width:13%"><span class="lang-en">Service Level (F*)</span><span class="lang-th">ระดับบริการ (F*)</span></th>
+          <th style="width:19%"><span class="lang-en">Historical Annual Profit</span><span class="lang-th">กำไรประจำปีก่อน</span></th>
+          <th style="width:19%"><span class="lang-en">Optimized Q* Profit</span><span class="lang-th">กำไร Q* ที่เพิ่มประสิทธิภาพ</span></th>
+          <th style="width:15%"><span class="lang-en">Uplift</span><span class="lang-th">ผลประโยชน์</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="prd"><span class="lang-en">Boba Thai Milk Tea</span><span class="lang-th">ชาไทยบีบ้า</span></td>
+          <td>59%</td>
+          <td class="num">197,009 THB</td>
+          <td class="num">239,893 THB</td>
+          <td class="up">+21.8%</td>
+        </tr>
+        <tr>
+          <td class="prd"><span class="lang-en">ML NOI Basil Chicken</span><span class="lang-th">ไก่กะเพรา ML NOI</span></td>
+          <td>68%</td>
+          <td class="num">178,942 THB</td>
+          <td class="num">212,458 THB</td>
+          <td class="up">+18.7%</td>
+        </tr>
+        <tr>
+          <td class="prd"><span class="lang-en">Uncle Chin Chicken Rice</span><span class="lang-th">ข้าวไก่ลุงจิน</span></td>
+          <td>60%</td>
+          <td class="num">98,956 THB</td>
+          <td class="num">152,017 THB</td>
+          <td class="up">+53.6%</td>
+        </tr>
+        <tr>
+          <td class="prd"><span class="lang-en">Chicken Teriyaki with Rice</span><span class="lang-th">ไก่เทอริยากิข้าว</span></td>
+          <td>65.5%</td>
+          <td class="num">146,913 THB</td>
+          <td class="num">172,034 THB</td>
+          <td class="up">+17.1%</td>
+        </tr>
+        <tr>
+          <td class="prd"><span class="lang-en">Boba Milk Tea (2025/26 SKU)</span><span class="lang-th">ชาบีบ้า (SKU 2568/69)</span></td>
+          <td>59%</td>
+          <td class="num loss">−13,266 THB</td>
+          <td class="num">74,602 THB</td>
+          <td><span class="turnaround"><span class="lang-en">Turnaround</span><span class="lang-th">พลิกกลับ</span></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="res-note reveal" style="transition-delay:.5s">
+    <span class="lang-en">The Boba Milk Tea turnaround: manual over-catering caused a net loss. The Tobit model detected the true lower demand and cut loading in low-demand months, flipping it to a profitable SKU.</span>
+    <span class="lang-th">ชาบีบ้าพลิกกลับ: การโหลดมากเกินไปด้วยมือทำให้ขาดทุน โมเดล Tobit ตรวจพบอุปสงค์จริงที่ต่ำกว่า และลดการโหลดในเดือนอุปสงค์ต่ำ จนพลิกเป็น SKU ที่ทำกำไรได้</span>
+  </div>
+
+  <div class="slide-num">12 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 13 — COLUMN GUIDE ═══════════════════════════════ -->
+<section class="slide" id="s12">
+  <div class="sunrise-stripe"></div>
+  <div class="guide-header">
+    <div class="gold-label reveal">
+      <span class="lang-en">Reference Guide</span>
+      <span class="lang-th">คู่มืออ้างอิง</span>
+    </div>
+    <h2 class="slide-heading reveal" style="transition-delay:.1s">
+      <span class="lang-en">Reading the Q* Table — Every Column Explained</span>
+      <span class="lang-th">อ่านตาราง Q* — อธิบายทุกคอลัมน์</span>
+    </h2>
+  </div>
+
+  <div class="col-grid">
+    <div class="col-card reveal" style="transition-delay:.1s">
+      <div class="col-card-name"><span class="lang-en">Product</span><span class="lang-th">สินค้า</span></div>
+      <div class="col-card-from"><span class="lang-en">Menu Config</span><span class="lang-th">ค่าตั้งค่าเมนู</span></div>
+      <div class="col-card-desc"><span class="lang-en">The perishable item name from active_menu.json. Only items toggled "active" appear in the table.</span><span class="lang-th">ชื่อสินค้าบ่อนาสทจาก active_menu.json เฉพาะสินค้าที่เปิด "active" เท่านั้นที่แสดงในตาราง</span></div>
+    </div>
+    <div class="col-card reveal" style="transition-delay:.18s">
+      <div class="col-card-name">Service Level (F*)</div>
+      <div class="col-card-from"><span class="lang-en">Step 4 — Critical Fractile</span><span class="lang-th">ขั้นที่ 4 — Critical Fractile</span></div>
+      <div class="col-card-desc"><span class="lang-en">Optimal probability of not stocking out. Rendered as a gold gradient bar. Higher = higher-margin item = system loads more safety stock.</span><span class="lang-th">ความน่าจะเป็นที่เหมาะสมในการไม่สินค้าขาด แสดงเป็นแถบไล่ระดับสีทอง สูงกว่า = กำไรสูงกว่า = ระบบโหลดสต๊อกความปลอดภัยมากกว่า</span></div>
+    </div>
+    <div class="col-card reveal" style="transition-delay:.26s">
+      <div class="col-card-name"><span class="lang-en">Stockout %</span><span class="lang-th">อัตราสินค้าขาด %</span></div>
+      <div class="col-card-from"><span class="lang-en">Step 2 — Historical Rate</span><span class="lang-th">ขั้นที่ 2 — อัตราประวัติ</span></div>
+      <div class="col-card-desc"><span class="lang-en">How often this item sold out completely in 2024–2026 history. High value = severe censoring = Tobit correction is most critical here.</span><span class="lang-th">ความถี่ที่สินค้านี้หมดสมบูรณ์ในประวัติ 2567–2569 ค่าสูง = การตัดรุนแรง = การแก้ไข Tobit สำคัญมากที่สุด</span></div>
+    </div>
+    <div class="col-card reveal" style="transition-delay:.34s">
+      <div class="col-card-name"><span class="lang-en">True Demand (μ)</span><span class="lang-th">อุปสงค์จริง (μ)</span></div>
+      <div class="col-card-from"><span class="lang-en">Steps 2 + 5</span><span class="lang-th">ขั้นที่ 2 + 5</span></div>
+      <div class="col-card-desc"><span class="lang-en">Tobit-uncensored expected demand scaled to this flight's net BoB passengers. Not raw average sales — the true demand before stockout distortion.</span><span class="lang-th">อุปสงค์คาดหวังปรับแก้ Tobit ปรับตาม Net BoB ไม่ใช่ยอดขายดิบ — อุปสงค์จริงก่อนการบิดเบือนจากสินค้าหมด</span></div>
+    </div>
+    <div class="col-card reveal" style="transition-delay:.42s">
+      <div class="col-card-name">Baseline Q*</div>
+      <div class="col-card-from"><span class="lang-en">Steps 2 + 3 + 4 + 5</span><span class="lang-th">ขั้นที่ 2 + 3 + 4 + 5</span></div>
+      <div class="col-card-desc"><span class="lang-en">Pure statistical recommendation before demographic adjustment. Expected demand + the z-score safety buffer scaled to this flight's passenger count.</span><span class="lang-th">คำแนะนำทางสถิติล้วนก่อนปรับประชากร อุปสงค์คาดหวัง + บัฟเฟอร์ z-score ปรับตามจำนวนผู้โดยสาร</span></div>
+    </div>
+    <div class="col-card reveal" style="transition-delay:.5s">
+      <div class="col-card-name"><span class="lang-en">Adjusted Q*</span><span class="lang-th">Q* ที่ปรับแล้ว</span></div>
+      <div class="col-card-from"><span class="lang-en">Step 5b — Demographic γ</span><span class="lang-th">ขั้นที่ 5b — แกมมาประชากร</span></div>
+      <div class="col-card-desc"><span class="lang-en">Baseline scaled by γ for this flight's actual nationality composition. Editable — operators can manually override. This is the quantity to physically load.</span><span class="lang-th">Baseline ปรับด้วย γ ตามองค์ประกอบสัญชาติจริง แก้ไขได้ — ผู้ปฏิบัติการ override ค่าได้ นี่คือจำนวนที่โหลดจริง</span></div>
+    </div>
+    <div class="col-card reveal" style="transition-delay:.58s">
+      <div class="col-card-name">Δ (Delta)</div>
+      <div class="col-card-from"><span class="lang-en">Adjusted − Baseline</span><span class="lang-th">Q* ที่ปรับ − Baseline</span></div>
+      <div class="col-card-desc"><span class="lang-en">How much the demographic adjustment changed the recommendation. Green badge = load more than statistical baseline. Red = load less.</span><span class="lang-th">ผลต่างจากการปรับประชากร สีเขียว = โหลดมากกว่า baseline สถิติ แดง = โหลดน้อยกว่า</span></div>
+    </div>
+    <div class="col-card reveal" style="transition-delay:.66s">
+      <div class="col-card-name"><span class="lang-en">Theories</span><span class="lang-th">ทฤษฎี</span></div>
+      <div class="col-card-from"><span class="lang-en">Full Audit Trail</span><span class="lang-th">ประวัติการตรวจสอบ</span></div>
+      <div class="col-card-desc"><span class="lang-en">Tags showing which of the 7 pipeline steps fired for this item. T6 tag = proxy-based new item. T7 tag = actuals have been incorporated.</span><span class="lang-th">แท็กแสดงว่าขั้นตอนใดใน 7 ทำงานสำหรับสินค้านี้ แท็ก T6 = สินค้าใหม่อ้างอิง proxy แท็ก T7 = ผนวกข้อมูลจริงแล้ว</span></div>
+    </div>
+  </div>
+
+  <div class="slide-num">13 / 14</div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 14 — WORKFLOW ═══════════════════════════════ -->
+<section class="slide" id="s13">
+  <div class="sunrise-stripe"></div>
+  <div class="wf-header">
+    <div class="gold-label reveal">
+      <span class="lang-en">How to Use the System</span>
+      <span class="lang-th">วิธีใช้ระบบ</span>
+    </div>
+    <h2 class="slide-heading reveal" style="transition-delay:.1s">
+      <span class="lang-en">Pre-Flight &amp; Post-Flight Operational Workflow</span>
+      <span class="lang-th">ขั้นตอนปฏิบัติการก่อนและหลังเที่ยวบิน</span>
+    </h2>
+  </div>
+
+  <div class="wf-cols">
+    <div class="wf-col pre reveal" style="transition-delay:.2s">
+      <div class="wf-col-hd">
+        <span class="lang-en">✈ Pre-Flight (2–3 Days Before)</span>
+        <span class="lang-th">✈ ก่อนเที่ยวบิน (2–3 วันล่วงหน้า)</span>
+      </div>
+      <div class="wf-step"><div class="wf-num">1</div>
+        <p class="lang-en"><strong>Export</strong> upcoming flight's passenger manifest CSV from PSS system</p>
+        <p class="lang-th"><strong>ส่งออก</strong> CSV รายชื่อผู้โดยสารของเที่ยวบินจากระบบ PSS</p>
+      </div>
+      <div class="wf-step"><div class="wf-num">2</div>
+        <p class="lang-en"><strong>Export</strong> pre-booked meal (PBM) booking data CSV for the same flight date</p>
+        <p class="lang-th"><strong>ส่งออก</strong> CSV ข้อมูลการจองอาหารล่วงหน้า (PBM) สำหรับวันเที่ยวบินเดียวกัน</p>
+      </div>
+      <div class="wf-step"><div class="wf-num">3</div>
+        <p class="lang-en"><strong>Upload both</strong> in the Forecast tab — system validates the dates match, returns pax count and demographic breakdown</p>
+        <p class="lang-th"><strong>อัปโหลดทั้งสอง</strong>ในแท็บ Forecast — ระบบตรวจสอบวันที่ตรงกัน คืนจำนวนผู้โดยสารและโครงสร้างสัญชาติ</p>
+      </div>
+      <div class="wf-step"><div class="wf-num">4</div>
+        <p class="lang-en"><strong>Click "Run Hyper-Personalized Forecast"</strong> — all 7 steps execute; Q* appears per active menu item in under 1 second</p>
+        <p class="lang-th"><strong>กด "Run Hyper-Personalized Forecast"</strong> — ทำ 7 ขั้นตอน ค่า Q* ปรากฏต่อสินค้าในเมนูในน้อยกว่า 1 วินาที</p>
+      </div>
+      <div class="wf-step"><div class="wf-num">5</div>
+        <p class="lang-en"><strong>Load catering</strong> at DMK per the Adjusted Q* column; override any value if operational context requires it</p>
+        <p class="lang-th"><strong>โหลดอาหาร</strong>ที่ DMK ตามคอลัมน์ Adjusted Q* แก้ไขค่าใดก็ได้หากบริบทปฏิบัติการกำหนด</p>
+      </div>
+    </div>
+
+    <div class="wf-col post reveal" style="transition-delay:.35s">
+      <div class="wf-col-hd">
+        <span class="lang-en">🛬 Post-Flight (After Return to DMK)</span>
+        <span class="lang-th">🛬 หลังเที่ยวบิน (หลังกลับถึง DMK)</span>
+      </div>
+      <div class="wf-step"><div class="wf-num">1</div>
+        <p class="lang-en"><strong>Export</strong> actual SaleALL CSV, Wastage CSV, and final boarded passenger manifest from POS/PSS</p>
+        <p class="lang-th"><strong>ส่งออก</strong> SaleALL CSV จริง, Wastage CSV, และรายชื่อผู้โดยสารขึ้นเครื่องจริงจาก POS/PSS</p>
+      </div>
+      <div class="wf-step"><div class="wf-num">2</div>
+        <p class="lang-en"><strong>Upload all three</strong> in the Post-Flight Actuals tab — the boarded passenger file is required (system blocks without it)</p>
+        <p class="lang-th"><strong>อัปโหลดทั้งสาม</strong>ในแท็บ Post-Flight Actuals — ไฟล์ผู้โดยสารที่ขึ้นเครื่องจำเป็นต้องมี (ระบบบล็อกหากไม่มี)</p>
+      </div>
+      <div class="wf-step"><div class="wf-num">3</div>
+        <p class="lang-en">System saves all files permanently, then <strong>re-runs Tobit MLE</strong> (Theory 7) on the full combined dataset automatically</p>
+        <p class="lang-th">ระบบบันทึกไฟล์ถาวร แล้ว<strong>รัน Tobit MLE ใหม่</strong> (ทฤษฎี 7) บนข้อมูลรวมทั้งหมดอัตโนมัติ</p>
+      </div>
+      <div class="wf-step"><div class="wf-num">4</div>
+        <p class="lang-en"><strong>Review updated μ, σ, Q*</strong> in the MLE Refit results table — the model has incorporated this flight and is ready for the next forecast</p>
+        <p class="lang-th"><strong>ตรวจสอบ μ, σ, Q* ที่อัปเดต</strong>ในตารางผล MLE Refit — โมเดลผนวกเที่ยวบินนี้แล้ว พร้อมสำหรับการคาดการณ์ถัดไป</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-num">14 / 14</div>
+</section>
+
+</main>
+</div>
+
+<!-- Navigation -->
+<div class="nav-dots" id="navDots"></div>
+<div class="nav-bar"><div class="nav-prog" id="navProg"></div></div>
+
+<!-- Language Switcher -->
+<div class="lang-sw" id="langSw">
+  <button data-lang="en" class="active">EN</button>
+  <button data-lang="th">TH</button>
+</div>
+
+<!-- Edit mode -->
+<div class="edit-hz" id="editHz"></div>
+<button class="edit-btn" id="editBtn" title="Edit mode (E)">✏</button>
+
+<script>
+/* === SLIDE CONTROLLER === */
+class Deck {
+  constructor() {
+    this.slides = document.querySelectorAll('.slide');
+    this.total = this.slides.length;
+    this.cur = 0;
+    this.stage = document.getElementById('deckStage');
+    this.dotsEl = document.getElementById('navDots');
+    this.prog = document.getElementById('navProg');
+    this.lastWheel = 0;
+    this._scale();
+    this._dots();
+    this._keys();
+    this._touch();
+    this._wheel();
+    this.go(0, false);
+    window.addEventListener('resize', () => this._scale());
+  }
+
+  _scale() {
+    const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    const x = (window.innerWidth - 1920 * f) / 2;
+    const y = (window.innerHeight - 1080 * f) / 2;
+    this.stage.style.transform = `translate(${x}px,${y}px) scale(${f})`;
+  }
+
+  _dots() {
+    for (let i = 0; i < this.total; i++) {
+      const d = document.createElement('div');
+      d.className = 'nav-dot';
+      d.addEventListener('click', () => this.go(i));
+      this.dotsEl.appendChild(d);
+    }
+  }
+
+  _updateNav() {
+    this.dotsEl.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('on', i === this.cur));
+    this.prog.style.width = ((this.cur + 1) / this.total * 100) + '%';
+  }
+
+  _keys() {
+    document.addEventListener('keydown', e => {
+      if (e.target.getAttribute('contenteditable')) return;
+      if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); this.next(); }
+      else if (['ArrowLeft','ArrowUp'].includes(e.key)) { e.preventDefault(); this.prev(); }
+      else if (e.key === 'Home') this.go(0);
+      else if (e.key === 'End') this.go(this.total - 1);
+    });
+  }
+
+  _touch() {
+    let sx = 0, sy = 0;
+    document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 48) dx < 0 ? this.next() : this.prev();
+    });
+  }
+
+  _wheel() {
+    document.addEventListener('wheel', e => {
+      const now = Date.now();
+      if (now - this.lastWheel < 650) return;
+      this.lastWheel = now;
+      e.deltaY > 0 ? this.next() : this.prev();
+    });
+  }
+
+  next() { this.go(this.cur + 1); }
+  prev() { this.go(this.cur - 1); }
+
+  go(idx, anim = true) {
+    if (idx < 0 || idx >= this.total) return;
+    this.slides.forEach(s => s.classList.remove('active','visible'));
+    this.cur = idx;
+    const s = this.slides[this.cur];
+    s.classList.add('active');
+    if (anim) {
+      requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('visible')));
+    } else {
+      s.classList.add('visible');
+    }
+    this._updateNav();
+  }
+}
+
+/* === INLINE EDITOR === */
+class Editor {
+  constructor() {
+    this.on = false;
+    this.btn = document.getElementById('editBtn');
+    this.hz = document.getElementById('editHz');
+    this.t = null;
+    this.btn.addEventListener('click', () => this.toggle());
+    this.hz.addEventListener('click', () => this.toggle());
+    this.hz.addEventListener('mouseenter', () => { clearTimeout(this.t); this.btn.classList.add('show'); });
+    this.hz.addEventListener('mouseleave', () => { this.t = setTimeout(() => { if (!this.on) this.btn.classList.remove('show'); }, 400); });
+    this.btn.addEventListener('mouseenter', () => clearTimeout(this.t));
+    this.btn.addEventListener('mouseleave', () => { this.t = setTimeout(() => { if (!this.on) this.btn.classList.remove('show'); }, 400); });
+    document.addEventListener('keydown', e => {
+      if ((e.key==='e'||e.key==='E') && !e.target.getAttribute('contenteditable')) this.toggle();
+    });
+  }
+  toggle() {
+    this.on = !this.on;
+    this.btn.classList.toggle('on', this.on);
+    document.querySelectorAll('.slide h1,.slide h2,.slide p,.slide td,.slide .title-main,.slide .step-title,.slide .stat-num,.slide .col-card-name,.slide .col-card-desc,.slide .wf-step p').forEach(el => {
+      this.on ? el.setAttribute('contenteditable','true') : el.removeAttribute('contenteditable');
+    });
+  }
+}
+
+const deck = new Deck();
+const editor = new Editor();
+
+/* === LANGUAGE SWITCHER === */
+(function(){
+  const btns = document.querySelectorAll('#langSw button');
+  function setLang(lang){
+    document.documentElement.className = lang==='th' ? 'th' : '';
+    btns.forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+    document.title = lang==='th'
+      ? 'AI คำนวณ Q* ได้อย่างไร — บรีฟผู้บริหาร TAA'
+      : 'How the AI Calculates Q* — TAA Executive Briefing';
+    try{localStorage.setItem('pres-lang',lang);}catch(e){}
+  }
+  btns.forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+  try{const s=localStorage.getItem('pres-lang');if(s==='th')setLang('th');}catch(e){}
+})();
+</script>
+</body>
+</html>

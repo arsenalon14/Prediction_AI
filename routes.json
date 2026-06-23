@@ -1,0 +1,123 @@
+{
+  "routes": [
+    {
+      "id": "DMK-MLE",
+      "name": "Bangkok – Maldives",
+      "type": "international",
+      "loading_station": "DMK",
+      "data_dir": "C:\\Users\\Chaiwatwannawit\\Desktop\\AI",
+      "sales_files": [
+        "SaleALL2024.csv",
+        "SaleALL2025.csv",
+        "SaleALL2026_Month1_4.csv",
+        "SaleALL2026_Month5_24.csv"
+      ],
+      "pax_files": [
+        "Passenger_Nat_Age_Seat-2024.csv",
+        "Passenger_Nat_Age_Seat-2025.csv",
+        "Passenger_Nat_Age_Seat-2026_Month5_24.csv"
+      ],
+      "pbm_files": [
+        "PBM-DATA_2024.csv",
+        "PBM-DATA_2025.csv",
+        "PBM-DATA_2026_Month1_4.csv",
+        "PBM-DATA_2026_Month5_24.csv"
+      ],
+      "wastage_files": [
+        "Wastage-2024.csv",
+        "Wastage-2025.csv",
+        "Wastage-2026_Month1_4.csv",
+        "Wastage-2026_Month5_24.csv"
+      ],
+      "active_skus": [
+        "FNBG02000218",
+        "FNBG03000025",
+        "FNBG03000041",
+        "FNBG03000085",
+        "FNBG03002061",
+        "FNBG03002193",
+        "FNBG03002233",
+        "FNBG03002236",
+        "FNBG02000926"
+      ]
+    },
+    {
+      "id": "DMK-CNX",
+      "name": "Bangkok – Chiang Mai",
+      "type": "domestic",
+      "loading_station": "DMK",
+      "data_dir": "C:\\Users\\Chaiwatwannawit\\Desktop\\AI\\CNX",
+      "sales_files": [
+        "SaleALL_CNX_2024.csv",
+        "SaleALL_CNX_2025.csv",
+        "SaleALL_CNX_2026_Month1_4.csv",
+        "SaleALL_CNX_2026_Month5_24.csv"
+      ],
+      "pax_files": [
+        "Passenger_CNX_2024.csv",
+        "Passenger_CNX_2025.csv",
+        "Passenger_CNX_2026_Month5_24.csv"
+      ],
+      "pbm_files": [
+        "PBM_CNX_2024.csv",
+        "PBM_CNX_2025.csv",
+        "PBM_CNX_2026_Month1_4.csv",
+        "PBM_CNX_2026_Month5_24.csv"
+      ],
+      "wastage_files": [
+        "Wastage_CNX_2024.csv",
+        "Wastage_CNX_2025.csv",
+        "Wastage_CNX_2026_Month1_4.csv",
+        "Wastage_CNX_2026_Month5_24.csv"
+      ],
+      "active_skus": [
+        "FNBG02000218",
+        "FNBG03000025",
+        "FNBG03000041",
+        "FNBG03002061",
+        "FNBG03002193",
+        "FNBG03002233",
+        "FNBG03002236"
+      ]
+    },
+    {
+      "id": "HKT-DMK",
+      "name": "Phuket – Bangkok",
+      "type": "domestic",
+      "loading_station": "HKT",
+      "data_dir": "C:\\Users\\Chaiwatwannawit\\Desktop\\AI\\HKT",
+      "sales_files": [
+        "SaleALL_HKT_2024.csv",
+        "SaleALL_HKT_2025.csv",
+        "SaleALL_HKT_2026_Month1_4.csv",
+        "SaleALL_HKT_2026_Month5_24.csv"
+      ],
+      "pax_files": [
+        "Passenger_HKT_2024.csv",
+        "Passenger_HKT_2025.csv",
+        "Passenger_HKT_2026_Month5_24.csv"
+      ],
+      "pbm_files": [
+        "PBM_HKT_2024.csv",
+        "PBM_HKT_2025.csv",
+        "PBM_HKT_2026_Month1_4.csv",
+        "PBM_HKT_2026_Month5_24.csv"
+      ],
+      "wastage_files": [
+        "Wastage_HKT_2024.csv",
+        "Wastage_HKT_2025.csv",
+        "Wastage_HKT_2026_Month1_4.csv",
+        "Wastage_HKT_2026_Month5_24.csv"
+      ],
+      "active_skus": [
+        "FNBG02000218",
+        "FNBG03000025",
+        "FNBG03000041",
+        "FNBG03002061",
+        "FNBG03002193",
+        "FNBG03002233",
+        "FNBG03002236"
+      ]
+    }
+  ]
+}
